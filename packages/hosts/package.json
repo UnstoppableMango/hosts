@@ -1,0 +1,14 @@
+{
+	"name": "hosts",
+	"version": "0.0.1",
+	"license": "MIT",
+	"packageManager": "yarn@1.22.22",
+	"main": "index.ts",
+	"devDependencies": {
+		"@types/node": "^18",
+		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"@pulumi/pulumi": "^3.113.0"
+	}
+}

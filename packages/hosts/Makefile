@@ -1,0 +1,18 @@
+_ := $(shell mkdir -p .make)
+
+export ROOT        := $(shell git rev-parse --show-toplevel)
+export WORKING_DIR := ${ROOT}/packages/hosts
+
+export PULUMI := pulumi -C ${WORKING_DIR}
+
+HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
+
+.PHONY: all
+all: $(HOSTS)
+
+.PHONY: $(HOSTS)
+$(HOSTS):
+	$(PULUMI) preview -s '$@'
+
+stacks:
+	hack/ensure-stacks.sh
