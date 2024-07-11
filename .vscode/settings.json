@@ -1,0 +1,4 @@
+{
+	"editor.defaultFormatter": "dprint.dprint",
+	"dprint.experimentalLsp": true
+}

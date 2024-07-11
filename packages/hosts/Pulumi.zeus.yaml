@@ -1,0 +1,14 @@
+config:
+  hosts:hostname: zeus
+  hosts:arch: amd64
+  hosts:ip: 192.168.1.10
+  hosts:clusterIp: 10.69.2.1
+  hosts:installDisk: /dev/sda
+  hosts:nodeLabels:
+    thecluster.io/zfs: true
+  hsots:ethernets:
+    name: enp8s0
+  hosts:vlan:
+    tag: 69
+    name: enp8s0.69
+    interface: enp8s0

@@ -1,0 +1,10 @@
+config:
+  hosts:hostname: pik8s8
+  hosts:arch: arm64
+  hosts:ip: 192.168.1.115
+  hosts:clusterIp: 10.69.2.12
+  hosts:installDisk: /dev/mmcblk0
+  hosts:vlan:
+    tag: 69
+    name: eth0.69
+    interface: eth0

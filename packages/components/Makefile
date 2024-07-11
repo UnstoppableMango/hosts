@@ -1,0 +1,17 @@
+_ := $(shell mkdir -p .make)
+
+export ROOT := $(shell git rev-parse --show-toplevel)
+
+.PHONY: build
+build: install
+	yarn build
+
+.PHONY: install
+install: .make/yarn_install
+.make/yarn_install: yarn.lock .make/corepack_enable
+	yarn install
+	@touch $@
+
+.make/corepack_enable: $(ROOT)/.nvmrc
+	corepack enable
+	@touch $@
