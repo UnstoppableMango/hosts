@@ -9,12 +9,15 @@ HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
 
 .PHONY: preview format
 
-preview:
+preview: components
 	@$(MAKE) -C ${PROGRAM_DIR} --no-print-directory
 
 .PHONY: $(HOSTS)
-$(HOSTS):
+$(HOSTS): components
 	@$(MAKE) -C ${PROGRAM_DIR} --no-print-directory $@
+
+components:
+	@$(MAKE) -C packages/components
 
 format:
 	dprint fmt
