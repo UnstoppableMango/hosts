@@ -5,7 +5,7 @@ export WORKING_DIR := ${ROOT}/packages/hosts
 
 export PULUMI := pulumi -C ${WORKING_DIR}
 
-HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
+HOSTS := $(shell cat ${ROOT}/hosts.txt)
 
 .PHONY: all
 all: $(HOSTS)

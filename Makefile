@@ -5,7 +5,7 @@ PROGRAM_DIR := ${WORKING_DIR}/packages/hosts
 
 PULUMI := pulumi -C ${PROGRAM_DIR}
 
-HOSTS := $(shell cat ${PROGRAM_DIR}/hosts.txt)
+HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
 
 .PHONY: preview format
 
@@ -18,3 +18,6 @@ $(HOSTS):
 
 format:
 	dprint fmt
+
+hosts_array:
+	@node ${WORKING_DIR}/hack/hosts_array.mjs
