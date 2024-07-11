@@ -368,9 +368,7 @@
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
 "@pulumi/pulumi@^3.113.0":
-  version "3.122.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.122.0.tgz#0a9f7d44a0cafd4092ac9c1f2b9859969edf462f"
-  integrity sha512-+EXWVJVLL+s2ianhZ4LxgNA9zt4hfgamnuwPr6qW0eBlk5gr906xSQgw4zdk8CIiAW+VT16TfxXk49Vj1BpBrw==
+  version "3.123.0"
   dependencies:
     "@grpc/grpc-js" "^1.10.1"
     "@logdna/tail-file" "^2.0.6"
