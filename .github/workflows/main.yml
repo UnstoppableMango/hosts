@@ -25,7 +25,7 @@ jobs:
       - name: Hosts output
         id: hosts
         run: |
-          "hosts=$(make hosts_array)" >> "$GITHUB_OUTPUT"
+          echo "hosts=$(make hosts_array)" >> "$GITHUB_OUTPUT"
 
   pulumi:
     runs-on: ubuntu-latest
