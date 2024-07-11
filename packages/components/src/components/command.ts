@@ -30,13 +30,13 @@ export abstract class CommandComponent extends ComponentResource {
 		this.connection = output(args.connection);
 	}
 
-	protected exec<T extends Resource, V extends HasConnection, U extends AnyOpts>(
-		ctor: RemoteResource<T, V>,
+	protected exec<T extends Resource, U extends HasConnection, V extends AnyOpts>(
+		ctor: RemoteResource<T, U>,
 		name: string,
-		args: RunArgs<V>,
-		opts?: RunOpts<U>,
+		args: RunArgs<U>,
+		opts?: RunOpts<V>,
 	): T {
-		const withConnection: V = Object.create({ ...args, connection: this.connection });
+		const withConnection: U = Object.create({ ...args, connection: this.connection });
 		return new ctor(name, withConnection, { ...opts, parent: this });
 	}
 }
