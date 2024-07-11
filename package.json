@@ -4,7 +4,7 @@
 	"packageManager": "yarn@1.22.22",
 	"private": true,
 	"workspaces": [
-		"packages/componenets",
+		"packages/components",
 		"packages/hosts"
 	]
 }
