@@ -1,0 +1,39 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": [
+		"config:recommended"
+	],
+	"automerge": true,
+	"customManagers": [
+		{
+			"customType": "regex",
+			"depNameTemplate": "dprint/dprint",
+			"datasourceTemplate": "github-releases",
+			"fileMatch": [
+				".*\\/.*\\.ya?ml"
+			],
+			"matchStrings": [
+				"dprint-version: (?<currentValue>.*)"
+			]
+		},
+		{
+			"customType": "regex",
+			"depNameTemplate": "pulumi/pulumi",
+			"datasourceTemplate": "github-releases",
+			"fileMatch": [
+				"\\.versions/pulumi"
+			],
+			"matchStrings": [
+				"(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+			]
+		}
+	],
+	"packageRules": [
+		{
+			"groupName": "pulumi",
+			"matchDepNames": [
+				"pulumi/pulumi$"
+			]
+		}
+	]
+}
