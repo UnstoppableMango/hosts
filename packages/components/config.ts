@@ -4,6 +4,7 @@ import * as path from 'node:path';
 import { Versions } from './types';
 import * as util from './util';
 
+// TODO: Refactor to accept versions via component inputs
 const root = path.resolve(__dirname, '..', '..');
 const versionPath = path.join(root, '.versions');
 const _versions = fs.readdir(versionPath)

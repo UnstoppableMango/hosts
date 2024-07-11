@@ -1,2 +1,10 @@
 config:
   hosts:hostname: vrk8s1
+  hosts:arch: amd64
+  hosts:ip: 192.168.1.107
+  hosts:clusterIp: 10.69.2.10
+  hosts:installDisk: /dev/sda
+  hosts:vlan:
+    tag: 69
+    name: eth0.69
+    interface: eth0
