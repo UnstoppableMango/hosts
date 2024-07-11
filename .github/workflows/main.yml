@@ -29,13 +29,13 @@ jobs:
 
   pulumi:
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.ref }}
-      cancel-in-progress: false
     needs: [setup]
     strategy:
       matrix:
         host: ${{ fromJson(needs.setup.outputs.hosts) }}
+    concurrency:
+      group: ${{ github.ref }}-${{ matrix.host }}
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
