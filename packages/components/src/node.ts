@@ -1,6 +1,6 @@
 import { remote } from '@pulumi/command';
 import { asset, ComponentResourceOptions } from '@pulumi/pulumi';
-import type { Node as NodeConfig } from '../config';
+import type { Node as NodeConfig } from '../types';
 import { CommandComponent, CommandComponentArgs } from './command';
 import { Kubeadm } from './kubeadm';
 import { Kubectl } from './kubectl';

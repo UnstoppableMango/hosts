@@ -2,7 +2,7 @@ import { remote } from '@pulumi/command';
 import { ComponentResourceOptions, Input, Inputs, interpolate, Output, output } from '@pulumi/pulumi';
 import { Chmod, Tee } from '@unmango/pulumi-commandx/remote';
 import * as YAML from 'yaml';
-import type { Bond, Ethernets, Node as NodeConfig, Vlan } from '../config';
+import type { Bond, Ethernets, Node, Vlan } from '../types';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface NetplanArgs extends CommandComponentArgs {
@@ -90,7 +90,7 @@ export class Netplan extends CommandComponent {
 		};
 	}
 
-	public static vlan(node: NodeConfig, vlan: Vlan): Inputs {
+	public static vlan(node: Node, vlan: Vlan): Inputs {
 		return {
 			network: {
 				vlans: {
