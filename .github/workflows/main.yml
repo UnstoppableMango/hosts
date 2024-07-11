@@ -1,0 +1,82 @@
+name: Main
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      hosts: ${{ steps.hosts.outputs.hosts }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Hosts output
+        id: hosts
+        run: |
+          "hosts=$(make hosts_array)" >> "$GITHUB_OUTPUT"
+
+  pulumi:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.ref }}
+      cancel-in-progress: false
+    needs: [setup]
+    strategy:
+      matrix:
+        host: ${{ fromJson(needs.setup.outputs.hosts) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Yarn install
+        run: yarn install --frozen-lockfile
+
+      - name: Dprint check
+        if: github.event_name == 'pull_request'
+        uses: dprint/check@v2.2
+        with:
+          dprint-version: 0.47.1
+
+      - name: Lint
+        if: github.event_name == 'pull_request' || false
+        run: yarn lint
+
+      - name: Pulumi login
+        uses: pulumi/auth-actions@v1
+        with:
+          organization: UnstoppableMango
+          requested-token-type: urn:pulumi:token-type:access_token:personal
+          scope: user:UnstoppableMango
+
+      # https://github.com/pulumi/actions/issues/1215
+      - name: Install Pulumi
+        uses: pulumi/actions@v5
+        with:
+          pulumi-version-file: .versions/pulumi
+
+      - name: Pulumi Preview
+        uses: pulumi/actions@v5
+        with:
+          command: preview
+          expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
+          stack-name: UnstoppableMango/hosts/${{ matrix.host }}
+          refresh: true
