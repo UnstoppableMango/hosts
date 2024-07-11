@@ -11,8 +11,18 @@ HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
 all: $(HOSTS)
 
 .PHONY: $(HOSTS)
-$(HOSTS):
-	$(PULUMI) preview -s '$@'
+$(HOSTS): install
+	@$(PULUMI) preview -s '$@'
 
 stacks:
 	hack/ensure-stacks.sh
+
+.PHONY: install
+install: .make/yarn_install
+.make/yarn_install: yarn.lock .make/corepack_enable
+	yarn install
+	@touch $@
+
+.make/corepack_enable: $(ROOT)/.nvmrc
+	corepack enable
+	@touch $@
