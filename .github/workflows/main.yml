@@ -67,16 +67,12 @@ jobs:
           requested-token-type: urn:pulumi:token-type:access_token:personal
           scope: user:UnstoppableMango
 
-      # https://github.com/pulumi/actions/issues/1215
-      - name: Install Pulumi
-        uses: pulumi/actions@v5
-        with:
-          pulumi-version-file: .versions/pulumi
-
       - name: Pulumi Preview
         uses: pulumi/actions@v5
         with:
-          command: preview
-          expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
+          work-dir: packages/hosts
           stack-name: UnstoppableMango/hosts/${{ matrix.host }}
+          command: preview
           refresh: true
+          pulumi-version-file: .versions/pulumi
+          expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
