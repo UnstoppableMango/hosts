@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@pulumi/command": "^1.0.0",
 		"@pulumi/pulumi": "^3.123.0",
+		"@pulumi/tls": "^5.0.4",
 		"@unmango/pulumi-commandx": "^0.1.2",
 		"@unmango/pulumi-kubernetes-the-hard-way": "^0.0.33",
 		"yaml": "^2.4.5",
