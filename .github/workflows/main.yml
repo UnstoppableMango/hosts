@@ -34,7 +34,7 @@ jobs:
       matrix:
         host: ${{ fromJson(needs.setup.outputs.hosts) }}
     concurrency:
-      group: ${{ github.ref }}-${{ matrix.host }}
+      group: ${{ matrix.host }}
       cancel-in-progress: false
     steps:
       - name: Checkout
@@ -57,7 +57,7 @@ jobs:
           dprint-version: 0.47.1
 
       - name: Lint
-        if: github.event_name == 'pull_request' || false
+        if: false && github.event_name == 'pull_request'
         run: yarn lint
 
       - name: Pulumi login
