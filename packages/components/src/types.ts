@@ -7,6 +7,11 @@ const AnyPrimitive = z.union([
 	z.number(),
 ]);
 
+export const Arch = z.union([
+	z.literal('amd64'),
+	z.literal('arm64'),
+]);
+
 export const HostKeys = z.object({
 	zeus: z.instanceof(PrivateKey),
 	// apollo: z.instanceof(PrivateKey),
@@ -37,10 +42,7 @@ export const Vlan = z.object({
 
 export const Node = z.object({
 	hostname: HostKeys.keyof(),
-	arch: z.union([
-		z.literal('amd64'),
-		z.literal('arm64'),
-	]),
+	arch: Arch,
 	ip: z.string(),
 	clusterIp: z.string(),
 	installDisk: z.string(),
@@ -68,10 +70,10 @@ export const Versions = z.object({
 	containerd: z.string(),
 	crictl: z.string(),
 	k8s: z.string(),
-	pulumi: z.string(),
 	runc: z.string(),
 });
 
+export type Arch = z.infer<typeof Arch>;
 export type Bond = z.infer<typeof Bond>;
 export type Ethernets = z.infer<typeof Ethernets>;
 export type HostKeys = z.infer<typeof HostKeys>;
