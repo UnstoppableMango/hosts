@@ -7,17 +7,17 @@ PULUMI := pulumi -C ${PROGRAM_DIR}
 
 HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
 
-.PHONY: preview format
-
+.PHONY: $(HOSTS) preview deploy components format
 preview: components
-	@$(MAKE) -C ${PROGRAM_DIR} --no-print-directory
+	@$(MAKE) -C ${PROGRAM_DIR} $@ --no-print-directory
+deploy: components
+	@$(MAKE) -C ${PROGRAM_DIR} $@ --no-print-directory
 
-.PHONY: $(HOSTS)
 $(HOSTS): components
 	@$(MAKE) -C ${PROGRAM_DIR} --no-print-directory $@
 
 components:
-	@$(MAKE) -C packages/components
+	@$(MAKE) -C packages/components --no-print-directory
 
 format:
 	dprint fmt
