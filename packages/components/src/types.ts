@@ -1,5 +1,5 @@
 import { PrivateKey } from '@pulumi/tls';
-import z from 'zod';
+import { z } from 'zod';
 
 const AnyPrimitive = z.union([
 	z.string(),

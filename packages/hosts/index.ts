@@ -1,47 +1,48 @@
 import * as pulumi from '@pulumi/pulumi';
+import { remote } from '@pulumi/command';
 import * as config from './config';
-// import { getExec, Netplan } from 'host-components';
+import { Runner, Netplan, Kubeadm, Kubectl } from 'components';
 
-// const exec = getExec({
-// 	host: config.hostname,
-// 	privateKey: '',
-// });
+const runner = new Runner({
+	host: config.hostname,
+	privateKey: 'TODO',
+});
 
-// let netplan: Netplan | undefined;
-// let bond: Netplan | undefined;
-// let vlan: Netplan | undefined;
+let ethernets: Netplan | undefined;
+let bond: Netplan | undefined;
+let vlan: Netplan | undefined;
 
-// if (config.ethernets) {
-// 	netplan = exec(Netplan, 'ethernets', {
-// 		config: Netplan.ethernets(config.ethernets),
-// 		file: '/etc/netplan/20-ethernets.yaml',
-// 	});
-// }
+if (config.ethernets) {
+	ethernets = runner.run(Netplan, 'ethernets', {
+		config: Netplan.ethernets(config.ethernets),
+		file: '/etc/netplan/20-ethernets.yaml',
+	});
+}
 
-// if (config.bond) {
-// 	exec(remote.CopyToRemote, 'systemd-module', {
-// 		remotePath: '/etc/modules-load.d/bonding.conf',
-// 		source: new pulumi.asset.StringAsset('bonding'),
-// 	});
+if (config.bond) {
+	runner.run(remote.CopyToRemote, 'systemd-module', {
+		remotePath: '/etc/modules-load.d/bonding.conf',
+		source: new pulumi.asset.StringAsset('bonding'),
+	});
 
-// 	const modprobe = exec(remote.Command, 'modprobe', {
-// 		create: 'modprobe bonding',
-// 		delete: 'modprobe -r bonding',
-// 	});
+	const modprobe = runner.run(remote.Command, 'modprobe', {
+		create: 'modprobe bonding',
+		delete: 'modprobe -r bonding',
+	});
 
-// 	bond = exec(Netplan, 'bond', {
-// 		config: Netplan.bond(config.bond),
-// 		file: '/etc/netplan/60-bonding.yaml',
-// 	}, { dependsOn: ethernets });
-// }
+	bond = runner.run(Netplan, 'bond', {
+		config: Netplan.bond(config.bond),
+		file: '/etc/netplan/60-bonding.yaml',
+	}, { dependsOn: ethernets });
+}
 
-// if (config.vlan) {
-// 	this.vlan = exec(Netplan, 'vlan', {
-// 		config: Netplan.vlan(config, config.vlan),
-// 		file: '/etc/netplan/69-thecluster-vlan.yaml',
-// 	}, { dependsOn: bond });
-// }
+if (config.vlan) {
+	vlan = runner.run(Netplan, 'vlan', {
+		config: Netplan.vlan(config, config.vlan),
+		file: '/etc/netplan/69-thecluster-vlan.yaml',
+	}, { dependsOn: bond });
+}
 
-// const archArgs = { arch: config.arch };
-// this.kubectl = this.exec(Kubectl, name, archArgs);
-// this.kubeadm = this.exec(Kubeadm, name, archArgs);
+const archArgs = { arch: config.arch };
+const kubectl = runner.run(Kubectl, name, archArgs);
+const kubeadm = runner.run(Kubeadm, name, archArgs);
