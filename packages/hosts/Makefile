@@ -7,7 +7,7 @@ export PULUMI := pulumi -C ${WORKING_DIR}
 
 HOSTS := $(shell cat ${ROOT}/hosts.txt)
 CONTROL_PLANES := pik8s4 pik8s5 pik8s6
-WORKERS := zeus gaea vrk8s1 pik8s8 pik8s0a
+WORKERS := zeus gaea vrk8s1 pik8s8
 
 COMMAND := preview
 
