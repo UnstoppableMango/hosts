@@ -3,6 +3,8 @@ import { remote } from '@pulumi/command';
 import * as config from './config';
 import { Runner, Netplan, Kubeadm, Kubectl } from 'components';
 
+const name = config.hostname;
+
 const runner = new Runner({
 	host: config.hostname,
 	privateKey: 'TODO',
@@ -43,6 +45,12 @@ if (config.vlan) {
 	}, { dependsOn: bond });
 }
 
-const archArgs = { arch: config.arch };
-const kubectl = runner.run(Kubectl, name, archArgs);
-const kubeadm = runner.run(Kubeadm, name, archArgs);
+const kubectl = runner.run(Kubectl, name, {
+	arch: config.arch,
+	version: config.versions.k8s,
+});
+
+const kubeadm = runner.run(Kubeadm, name, {
+	arch: config.arch,
+	version: config.versions.k8s,
+});
