@@ -10,6 +10,6 @@
 	},
 	"dependencies": {
 		"@pulumi/pulumi": "^3.113.0",
-		"host-components": "0.0.1"
+		"components": "0.0.1"
 	}
 }
