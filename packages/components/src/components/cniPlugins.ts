@@ -1,11 +1,11 @@
-import { ComponentResourceOptions, Output } from '@pulumi/pulumi';
+import { ComponentResourceOptions, Input, Output } from '@pulumi/pulumi';
 import { Mkdir } from '@unmango/pulumi-commandx/remote';
 import { Architecture, CniPluginsInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { versions } from '../config';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface CniPluginsArgs extends CommandComponentArgs {
 	arch: Architecture;
+	version: Input<string>;
 }
 
 export class CniPlugins extends CommandComponent {
@@ -25,7 +25,7 @@ export class CniPlugins extends CommandComponent {
 		const install = this.exec(CniPluginsInstall, 'cni', {
 			architecture: args.arch,
 			directory,
-			version: versions.cniPlugins,
+			version: args.version,
 		}, { dependsOn: mkdir });
 
 		this.directory = install.directory;
