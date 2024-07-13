@@ -1,7 +1,8 @@
-import * as pulumi from '@pulumi/pulumi';
 import { remote } from '@pulumi/command';
+import * as pulumi from '@pulumi/pulumi';
+import { Kubeadm, Kubectl, Netplan, Runner } from 'components';
 import * as config from './config';
-import { Runner, Netplan, Kubeadm, Kubectl } from 'components';
+import { Network } from 'components/src/netplan';
 
 const name = config.hostname;
 
@@ -10,16 +11,9 @@ const runner = new Runner({
 	privateKey: config.loginKey,
 });
 
-let ethernets: Netplan | undefined;
-let bond: Netplan | undefined;
-let vlan: Netplan | undefined;
-
-if (config.ethernets) {
-	ethernets = runner.run(Netplan, 'ethernets', {
-		config: Netplan.ethernets(config.ethernets),
-		file: '/etc/netplan/20-ethernets.yaml',
-	});
-}
+let networks: Network = {
+	ethernets: config.ethernets,
+};
 
 if (config.bond) {
 	runner.run(remote.CopyToRemote, 'systemd-module', {
