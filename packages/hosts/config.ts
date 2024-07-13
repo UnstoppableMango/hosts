@@ -1,4 +1,5 @@
-import { Config } from '@pulumi/pulumi';
+import { Config, StackReference } from '@pulumi/pulumi';
+import { PrivateKey } from '@pulumi/tls';
 import { Arch, Bond, Ethernets, Hosts, Versions, Vlan } from 'components';
 import { z } from 'zod';
 
@@ -9,7 +10,7 @@ const getZod = <T>(parser: z.ZodType<T>, key: string): T | undefined => {
 }
 
 const requireZod = <T>(parser: z.ZodType<T>, key: string): T => {
-  return parser.parse(config.requireObject<T>(key));
+	return parser.parse(config.requireObject<T>(key));
 }
 
 export const arch = config.require<Arch>('arch');
@@ -21,3 +22,11 @@ export const installDisk = config.require('installDisk');
 export const ip = config.require('ip');
 export const versions = requireZod(Versions, 'versions');
 export const vlan = requireZod(Vlan, 'vlan');
+
+const pkiRef = new StackReference('pki', {
+	name: 'UnstoppableMango/pki/prod',
+});
+
+export const loginKey = pkiRef.requireOutput('hostKeys')
+	.apply(keys => keys[hostname] as PrivateKey)
+	.apply(x => x.privateKeyOpenssh);

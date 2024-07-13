@@ -6,8 +6,8 @@ import { Runner, Netplan, Kubeadm, Kubectl } from 'components';
 const name = config.hostname;
 
 const runner = new Runner({
-	host: config.hostname,
-	privateKey: 'TODO',
+	host: config.ip,
+	privateKey: config.loginKey,
 });
 
 let ethernets: Netplan | undefined;
