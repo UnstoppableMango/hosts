@@ -1,4 +1,3 @@
-import { PrivateKey } from '@pulumi/tls';
 import { z } from 'zod';
 
 const AnyPrimitive = z.union([
@@ -12,16 +11,22 @@ export const Arch = z.union([
 	z.literal('arm64'),
 ]);
 
-export const HostKeys = z.object({
-	zeus: z.instanceof(PrivateKey),
-	// apollo: z.instanceof(PrivateKey),
-	gaea: z.instanceof(PrivateKey),
-	pik8s4: z.instanceof(PrivateKey),
-	pik8s5: z.instanceof(PrivateKey),
-	pik8s6: z.instanceof(PrivateKey),
-	pik8s8: z.instanceof(PrivateKey),
-	vrk8s1: z.instanceof(PrivateKey),
-});
+export const Role = z.union([
+	z.literal('controlplane'),
+	z.literal('worker'),
+]);
+
+export const HostNames = z.union([
+	z.literal('zeus'),
+	z.literal('apollo'),
+	z.literal('gaea'),
+	z.literal('pik8s4'),
+	z.literal('pik8s5'),
+	z.literal('pik8s6'),
+	z.literal('pik8s8'),
+	z.literal('vrk8s1'),
+	z.literal('pik8s0a'),
+]);
 
 export const Ethernets = z.object({
 	name: z.string(),
@@ -41,28 +46,17 @@ export const Vlan = z.object({
 });
 
 export const Node = z.object({
-	hostname: HostKeys.keyof(),
 	arch: Arch,
-	ip: z.string(),
+	bond: Bond.optional(),
 	clusterIp: z.string(),
+	ethernets: Ethernets.optional(),
+	hostname: HostNames,
 	installDisk: z.string(),
-	qemu: z.boolean().optional(),
+	ip: z.string(),
 	nodeLabels: z.record(AnyPrimitive).optional(),
 	nodeTaints: z.record(AnyPrimitive).optional(),
-	ethernets: Ethernets.optional(),
-	bond: Bond.optional(),
-	vlan: Vlan.optional(),
-});
-
-export const Hosts = z.object({
-	zeus: Node,
-	// apollo: Node,
-	gaea: Node,
-	pik8s4: Node,
-	pik8s5: Node,
-	pik8s6: Node,
-	pik8s8: Node,
-	vrk8s1: Node,
+	role: Role,
+	vlan: Vlan,
 });
 
 export const Versions = z.object({
@@ -76,8 +70,8 @@ export const Versions = z.object({
 export type Arch = z.infer<typeof Arch>;
 export type Bond = z.infer<typeof Bond>;
 export type Ethernets = z.infer<typeof Ethernets>;
-export type HostKeys = z.infer<typeof HostKeys>;
-export type Hosts = z.infer<typeof Hosts>;
+export type HostNames = z.infer<typeof HostNames>;
 export type Node = z.infer<typeof Node>;
+export type Role = z.infer<typeof Role>;
 export type Versions = z.infer<typeof Versions>;
 export type Vlan = z.infer<typeof Vlan>;

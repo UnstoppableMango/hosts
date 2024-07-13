@@ -1,6 +1,6 @@
 import { Config, StackReference } from '@pulumi/pulumi';
 import { PrivateKey } from '@pulumi/tls';
-import { Arch, Bond, Ethernets, Hosts, Versions, Vlan } from 'components';
+import { Arch, Bond, Ethernets, HostNames, Role, Versions, Vlan } from 'components';
 import { z } from 'zod';
 
 const config = new Config();
@@ -17,9 +17,10 @@ export const arch = config.require<Arch>('arch');
 export const bond = getZod(Bond, 'bond');
 export const clusterIp = config.require('clusterIp');
 export const ethernets = getZod(Ethernets, 'ethernets');
-export const hostname = config.require<keyof Hosts>('hostname');
+export const hostname = config.require<HostNames>('hostname');
 export const installDisk = config.require('installDisk');
 export const ip = config.require('ip');
+export const role = config.require<Role>('role');
 export const versions = requireZod(Versions, 'versions');
 export const vlan = requireZod(Vlan, 'vlan');
 

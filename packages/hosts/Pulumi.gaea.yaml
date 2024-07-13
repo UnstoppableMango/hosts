@@ -1,5 +1,6 @@
 config:
   hosts:hostname: gaea
+  hosts:role: worker
   hosts:arch: amd64
   hosts:ip: 192.168.1.11
   hosts:clusterIp: 10.69.2.2
