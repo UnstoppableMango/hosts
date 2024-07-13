@@ -7,11 +7,11 @@ const config = new Config();
 
 const getZod = <T>(parser: z.ZodType<T>, key: string): T | undefined => {
 	return parser.optional().parse(config.getObject<T>(key));
-}
+};
 
 const requireZod = <T>(parser: z.ZodType<T>, key: string): T => {
 	return parser.parse(config.requireObject<T>(key));
-}
+};
 
 export const arch = config.require<Arch>('arch');
 export const bond = getZod(Bond, 'bond');

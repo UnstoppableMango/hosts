@@ -42,19 +42,19 @@ export const Wifis = z.object({});
 export const NmDevices = z.object({});
 
 export const Network = z.object({
-  version: z.number().optional(),
-  renderer: z.string().optional(),
-  bonds: z.record(z.string(), Bonds).optional(),
-  bridges: z.record(z.string(), Bridges).optional(),
-  ['dummy-devices']: z.record(z.string(), DummyDevices).optional(),
-  ethernets: z.record(z.string(), Ethernets).optional(),
-  modems: z.record(z.string(), Modems).optional(),
-  tunnels: z.record(z.string(), Tunnels).optional(),
-  ['virtual-ethernets']: z.record(z.string(), VirtualEthernets).optional(),
-  vlans: z.record(z.string(), Vlans).optional(),
-  vrfs: z.record(z.string(), Vrfs).optional(),
-  wifis: z.record(z.string(), Wifis).optional(),
-  ['nm-devices']: z.record(z.string(), NmDevices).optional(),
+	version: z.number().optional(),
+	renderer: z.string().optional(),
+	bonds: z.record(z.string(), Bonds).optional(),
+	bridges: z.record(z.string(), Bridges).optional(),
+	['dummy-devices']: z.record(z.string(), DummyDevices).optional(),
+	ethernets: z.record(z.string(), Ethernets).optional(),
+	modems: z.record(z.string(), Modems).optional(),
+	tunnels: z.record(z.string(), Tunnels).optional(),
+	['virtual-ethernets']: z.record(z.string(), VirtualEthernets).optional(),
+	vlans: z.record(z.string(), Vlans).optional(),
+	vrfs: z.record(z.string(), Vrfs).optional(),
+	wifis: z.record(z.string(), Wifis).optional(),
+	['nm-devices']: z.record(z.string(), NmDevices).optional(),
 });
 
 export const NetplanConfig = z.object({

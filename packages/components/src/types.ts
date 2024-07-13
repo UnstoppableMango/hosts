@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Ethernets } from './netplan';
 
 const AnyPrimitive = z.union([
 	z.string(),
@@ -27,10 +28,6 @@ export const HostNames = z.union([
 	z.literal('vrk8s1'),
 	z.literal('pik8s0a'),
 ]);
-
-export const Ethernets = z.object({
-	name: z.string(),
-});
 
 export const Bond = z.object({
 	name: z.string(),
@@ -69,7 +66,6 @@ export const Versions = z.object({
 
 export type Arch = z.infer<typeof Arch>;
 export type Bond = z.infer<typeof Bond>;
-export type Ethernets = z.infer<typeof Ethernets>;
 export type HostNames = z.infer<typeof HostNames>;
 export type Node = z.infer<typeof Node>;
 export type Role = z.infer<typeof Role>;
