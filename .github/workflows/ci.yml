@@ -61,6 +61,10 @@ jobs:
         if: false && github.event_name == 'pull_request'
         run: yarn lint
 
+        # Random delay to work around the 500 errors
+      - name: Random Delay
+        run: sleep $((RANDOM % 60))
+
       - name: Pulumi login
         uses: pulumi/auth-actions@v1
         with:
