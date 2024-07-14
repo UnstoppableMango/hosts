@@ -63,9 +63,7 @@ jobs:
 
         # Random delay to work around the 500 errors
       - name: Random Delay
-        run: |
-          HASH=$(cksum <<< '${{ matrix.host }}' | cut -f 1 -d ' ')
-          sleep $(($HASH % 30))
+        run: sleep $((${{ strategy.job-index }} * 5))
 
       - name: Pulumi login
         uses: pulumi/auth-actions@v1
