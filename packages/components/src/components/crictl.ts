@@ -1,10 +1,10 @@
-import { ComponentResourceOptions } from '@pulumi/pulumi';
+import { ComponentResourceOptions, Input } from '@pulumi/pulumi';
 import { Architecture, CrictlInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { versions } from '../config';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface CrictlArgs extends CommandComponentArgs {
 	arch: Architecture;
+	version: Input<string>;
 }
 
 export class Crictl extends CommandComponent {
@@ -14,7 +14,7 @@ export class Crictl extends CommandComponent {
 
 		this.exec(CrictlInstall, 'crictl', {
 			architecture: args.arch,
-			version: versions.crictl,
+			version: args.version,
 		});
 	}
 }

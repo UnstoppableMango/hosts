@@ -1,11 +1,11 @@
-import { ComponentResourceOptions } from '@pulumi/pulumi';
+import { ComponentResourceOptions, Input } from '@pulumi/pulumi';
 import { Chmod } from '@unmango/pulumi-commandx/remote';
 import { Architecture, KubectlInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { versions } from '../config';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface KubectlArgs extends CommandComponentArgs {
 	arch: Architecture;
+	version: Input<string>;
 }
 
 export class Kubectl extends CommandComponent {
@@ -15,7 +15,7 @@ export class Kubectl extends CommandComponent {
 
 		const install = this.exec(KubectlInstall, name, {
 			architecture: args.arch,
-			version: versions.k8s,
+			version: args.version,
 		});
 
 		const chmod = this.exec(Chmod, name, {

@@ -6,20 +6,29 @@ export WORKING_DIR := ${ROOT}/packages/hosts
 export PULUMI := pulumi -C ${WORKING_DIR}
 
 HOSTS := $(shell cat ${ROOT}/hosts.txt)
+CONTROL_PLANES := pik8s4 pik8s5 pik8s6
+WORKERS := zeus gaea vrk8s1 pik8s8
 
-.PHONY: all
-all: $(HOSTS)
+COMMAND := preview
+
+.PHONY: all preview deploy
+all: preview
+preview: $(HOSTS)
+deploy: COMMAND := up
+deploy: $(CONTROL_PLANES) $(WORKERS)
 
 .PHONY: $(HOSTS)
-$(HOSTS): install
-	@$(PULUMI) preview -s '$@'
+$(CONTROL_PLANES): install
+	@$(PULUMI) $(COMMAND) -s '$@'
+$(WORKERS): install $(CONTROL_PLANES)
+	@$(PULUMI) $(COMMAND) -s '$@'
 
 stacks:
 	hack/ensure-stacks.sh
 
 .PHONY: install
 install: .make/yarn_install
-.make/yarn_install: yarn.lock .make/corepack_enable
+.make/yarn_install: package.json yarn.lock .make/corepack_enable
 	yarn install
 	@touch $@
 

@@ -1,10 +1,10 @@
-import { ComponentResourceOptions } from '@pulumi/pulumi';
+import { ComponentResourceOptions, Input } from '@pulumi/pulumi';
 import { Architecture, RuncInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { versions } from '../config';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface RuncArgs extends CommandComponentArgs {
 	arch: Architecture;
+	version: Input<string>;
 }
 
 export class Runc extends CommandComponent {
@@ -14,7 +14,7 @@ export class Runc extends CommandComponent {
 
 		this.exec(RuncInstall, 'runc', {
 			architecture: args.arch,
-			version: versions.runc,
+			version: args.version,
 		});
 	}
 }

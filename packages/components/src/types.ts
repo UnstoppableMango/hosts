@@ -1,5 +1,5 @@
-import { PrivateKey } from '@pulumi/tls';
-import z from 'zod';
+import { z } from 'zod';
+import { Bond, Ethernet, Vlan } from './netplan';
 
 const AnyPrimitive = z.union([
 	z.string(),
@@ -7,60 +7,40 @@ const AnyPrimitive = z.union([
 	z.number(),
 ]);
 
-export const HostKeys = z.object({
-	zeus: z.instanceof(PrivateKey),
-	// apollo: z.instanceof(PrivateKey),
-	gaea: z.instanceof(PrivateKey),
-	pik8s4: z.instanceof(PrivateKey),
-	pik8s5: z.instanceof(PrivateKey),
-	pik8s6: z.instanceof(PrivateKey),
-	pik8s8: z.instanceof(PrivateKey),
-	vrk8s1: z.instanceof(PrivateKey),
-});
+export const Arch = z.union([
+	z.literal('amd64'),
+	z.literal('arm64'),
+]);
 
-export const Ethernets = z.object({
-	name: z.string(),
-});
+export const Role = z.union([
+	z.literal('controlplane'),
+	z.literal('worker'),
+]);
 
-export const Bond = z.object({
-	name: z.string(),
-	interfaces: z.array(z.string()),
-	addresses: z.array(z.string()),
-	mode: z.string(),
-});
-
-export const Vlan = z.object({
-	tag: z.number(),
-	name: z.string(),
-	interface: z.string(),
-});
+export const HostNames = z.union([
+	z.literal('zeus'),
+	z.literal('apollo'),
+	z.literal('gaea'),
+	z.literal('pik8s4'),
+	z.literal('pik8s5'),
+	z.literal('pik8s6'),
+	z.literal('pik8s8'),
+	z.literal('vrk8s1'),
+	z.literal('pik8s0a'),
+]);
 
 export const Node = z.object({
-	hostname: HostKeys.keyof(),
-	arch: z.union([
-		z.literal('amd64'),
-		z.literal('arm64'),
-	]),
-	ip: z.string(),
+	arch: Arch,
+	bond: Bond.optional(),
 	clusterIp: z.string(),
+	ethernets: Ethernet.optional(),
+	hostname: HostNames,
 	installDisk: z.string(),
-	qemu: z.boolean().optional(),
+	ip: z.string(),
 	nodeLabels: z.record(AnyPrimitive).optional(),
 	nodeTaints: z.record(AnyPrimitive).optional(),
-	ethernets: Ethernets.optional(),
-	bond: Bond.optional(),
-	vlan: Vlan.optional(),
-});
-
-export const Hosts = z.object({
-	zeus: Node,
-	// apollo: Node,
-	gaea: Node,
-	pik8s4: Node,
-	pik8s5: Node,
-	pik8s6: Node,
-	pik8s8: Node,
-	vrk8s1: Node,
+	role: Role,
+	vlan: Vlan,
 });
 
 export const Versions = z.object({
@@ -68,14 +48,11 @@ export const Versions = z.object({
 	containerd: z.string(),
 	crictl: z.string(),
 	k8s: z.string(),
-	pulumi: z.string(),
 	runc: z.string(),
 });
 
-export type Bond = z.infer<typeof Bond>;
-export type Ethernets = z.infer<typeof Ethernets>;
-export type HostKeys = z.infer<typeof HostKeys>;
-export type Hosts = z.infer<typeof Hosts>;
+export type Arch = z.infer<typeof Arch>;
+export type HostNames = z.infer<typeof HostNames>;
 export type Node = z.infer<typeof Node>;
+export type Role = z.infer<typeof Role>;
 export type Versions = z.infer<typeof Versions>;
-export type Vlan = z.infer<typeof Vlan>;

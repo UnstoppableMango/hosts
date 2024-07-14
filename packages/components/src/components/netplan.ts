@@ -2,12 +2,14 @@ import { remote } from '@pulumi/command';
 import { ComponentResourceOptions, Input, Inputs, interpolate, Output, output } from '@pulumi/pulumi';
 import { Chmod, Tee } from '@unmango/pulumi-commandx/remote';
 import * as YAML from 'yaml';
-import type { Bond, Ethernets, Node, Vlan } from '../types';
+import { Bond, NetplanConfig, Network, Vlan } from '../netplan';
+import type { Node } from '../types';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface NetplanArgs extends CommandComponentArgs {
-	file: Input<string>;
-	config: Inputs;
+	priority: Input<number>;
+	name: Input<string>;
+	config: Input<Network>;
 }
 
 export class Netplan extends CommandComponent {
@@ -22,12 +24,15 @@ export class Netplan extends CommandComponent {
 		super(`thecluster:infra:Netplan/${name}`, name, args, opts);
 		if (opts?.urn) return;
 
-		const file = output(args.file);
+		const file = interpolate`/etc/netplan/${args.priority}-${args.name}.yaml`;
 		const remove = this.exec(remote.Command, 'remove-netplan', {
 			delete: 'netplan apply',
 		});
 
-		const content = output(args.config).apply(YAML.stringify);
+		const content = output(args.config)
+			.apply<NetplanConfig>(network => ({ network }))
+			.apply(YAML.stringify);
+
 		const config = this.exec(Tee, 'netplan', {
 			stdin: content,
 			create: { files: [file] },
@@ -60,49 +65,37 @@ export class Netplan extends CommandComponent {
 		});
 	}
 
-	public static ethernets(ethernets: Ethernets): Inputs {
-		return {
-			network: {
-				bonds: {
-					[ethernets.name]: {
-						dhcp4: false,
-					},
-				},
-			},
-		};
-	}
+	// public static bond(bond: Bond): Inputs {
+	// 	return {
+	// 		network: {
+	// 			bonds: {
+	// 				[bond.name]: {
+	// 					interfaces: bond.interfaces,
+	// 					addresses: bond.addresses,
+	// 					parameters: {
+	// 						mode: bond.mode,
+	// 						'transmit-hash-policy': 'layer3+4',
+	// 						'mii-monitor-interval': 1,
+	// 					},
+	// 				},
+	// 			},
+	// 		},
+	// 	};
+	// }
 
-	public static bond(bond: Bond): Inputs {
-		return {
-			network: {
-				bonds: {
-					[bond.name]: {
-						interfaces: bond.interfaces,
-						addresses: bond.addresses,
-						parameters: {
-							mode: bond.mode,
-							'transmit-hash-policy': 'layer3+4',
-							'mii-monitor-interval': 1,
-						},
-					},
-				},
-			},
-		};
-	}
-
-	public static vlan(node: Node, vlan: Vlan): Inputs {
-		return {
-			network: {
-				vlans: {
-					[vlan.name]: {
-						id: vlan.tag,
-						link: vlan.interface,
-						addresses: [
-							`${node.clusterIp}/16`,
-						],
-					},
-				},
-			},
-		};
-	}
+	// public static vlan(node: Node, vlan: Vlan): Inputs {
+	// 	return {
+	// 		network: {
+	// 			vlans: {
+	// 				[vlan.name]: {
+	// 					id: vlan.tag,
+	// 					link: vlan.interface,
+	// 					addresses: [
+	// 						`${node.clusterIp}/16`,
+	// 					],
+	// 				},
+	// 			},
+	// 		},
+	// 	};
+	// }
 }

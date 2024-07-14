@@ -1,12 +1,13 @@
 import { remote } from '@pulumi/command';
-import { asset, ComponentResourceOptions } from '@pulumi/pulumi';
+import { asset, ComponentResourceOptions, Input } from '@pulumi/pulumi';
 import { Chmod, Mkdir } from '@unmango/pulumi-commandx/remote';
 import { Architecture, KubeadmInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { Defaults, versions } from '../config';
+import { Defaults } from '../config';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface KubeadmArgs extends CommandComponentArgs {
 	arch: Architecture;
+	version: Input<string>;
 }
 
 export class Kubeadm extends CommandComponent {
@@ -16,7 +17,7 @@ export class Kubeadm extends CommandComponent {
 
 		const install = this.exec(KubeadmInstall, name, {
 			architecture: args.arch,
-			version: versions.k8s,
+			version: args.version,
 		});
 
 		const chmod = this.exec(Chmod, name, {

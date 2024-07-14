@@ -1,5 +1,6 @@
 config:
   hosts:hostname: zeus
+  hosts:role: worker
   hosts:arch: amd64
   hosts:ip: 192.168.1.10
   hosts:clusterIp: 10.69.2.1
@@ -7,8 +8,11 @@ config:
   hosts:nodeLabels:
     thecluster.io/zfs: true
   hsots:ethernets:
-    name: enp8s0
-  hosts:vlan:
-    tag: 69
-    name: enp8s0.69
-    interface: enp8s0
+    enp8s0:
+      dhcp4: false
+  hosts:vlans:
+    enp8s0.69:
+      id: 69
+      link: enp8s0
+      addresses:
+        - 10.69.2.1/16

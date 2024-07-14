@@ -1,12 +1,12 @@
 import { remote } from '@pulumi/command';
-import { asset, ComponentResourceOptions, interpolate } from '@pulumi/pulumi';
+import { asset, ComponentResourceOptions, Input, interpolate, output } from '@pulumi/pulumi';
 import { Mkdir, Wget } from '@unmango/pulumi-commandx/remote';
 import { Architecture, ContainerdInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { versions } from '../config';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface ContainerdArgs extends CommandComponentArgs {
 	arch: Architecture;
+	version: Input<string>;
 }
 
 export class Containerd extends CommandComponent {
@@ -14,16 +14,18 @@ export class Containerd extends CommandComponent {
 		super(`thecluster:infra:Containerd/${name}`, name, args, opts);
 		if (opts?.urn) return;
 
+		const version = output(args.version);
+
 		const install = this.exec(ContainerdInstall, 'containerd', {
 			architecture: args.arch,
-			version: versions.containerd,
+			version,
 		});
 
 		const systemdDirectory = '/usr/local/lib/systemd/system';
 		const systemdService = this.exec(Wget, 'containerd-systemd', {
 			create: {
 				url: [
-					interpolate`https://raw.githubusercontent.com/containerd/containerd/v${versions.containerd}/containerd.service`,
+					interpolate`https://raw.githubusercontent.com/containerd/containerd/v${version}/containerd.service`,
 				],
 				directoryPrefix: systemdDirectory,
 			},

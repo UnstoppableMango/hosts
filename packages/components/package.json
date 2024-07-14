@@ -1,5 +1,5 @@
 {
-	"name": "host-components",
+	"name": "components",
 	"version": "0.0.1",
 	"description": "Component resources for host provisioning",
 	"main": "index.ts",
