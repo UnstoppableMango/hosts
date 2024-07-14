@@ -21,7 +21,7 @@
 			"depNameTemplate": "pulumi/pulumi",
 			"datasourceTemplate": "github-releases",
 			"fileMatch": [
-				"\\.versions/pulumi"
+				"\\.versions\\/pulumi"
 			],
 			"matchStrings": [
 				"(?<currentValue>\\d+\\.\\d+\\.\\d+)"
