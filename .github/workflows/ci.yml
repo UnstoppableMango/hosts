@@ -65,7 +65,7 @@ jobs:
       - name: Random Delay
         run: |
           HASH=$(cksum <<< '${{ matrix.host }}' | cut -f 1 -d ' ')
-          sleep $(($HASH % 120))
+          sleep $(($HASH % 30))
 
       - name: Pulumi login
         uses: pulumi/auth-actions@v1
