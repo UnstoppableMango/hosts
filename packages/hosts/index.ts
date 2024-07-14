@@ -1,6 +1,17 @@
 import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
-import { CniPlugins, Containerd, Crictl, Ipv4PacketForwarding, Kubeadm, Kubectl, Kubelet, Netplan, Runc, Runner } from 'components';
+import {
+	CniPlugins,
+	Containerd,
+	Crictl,
+	Ipv4PacketForwarding,
+	Kubeadm,
+	Kubectl,
+	Kubelet,
+	Netplan,
+	Runc,
+	Runner,
+} from 'components';
 import { Network } from 'components/src/netplan';
 import * as config from './config';
 
