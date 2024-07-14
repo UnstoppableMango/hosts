@@ -1,0 +1,15 @@
+config:
+  hosts:hostname: apollo
+  hosts:role: worker
+  hosts:arch: amd64
+  hosts:ip: 192.168.1.12
+  hosts:clusterIp: 10.69.2.3
+  hosts:installDisk: /dev/sda
+  hosts:nodeLabels:
+    thecluster.io/zfs: true
+  hosts:vlans:
+    eno2.69:
+      id: 69
+      link: eno2
+      addresses:
+        - 10.69.2.3/16
