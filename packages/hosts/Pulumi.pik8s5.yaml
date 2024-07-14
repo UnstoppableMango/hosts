@@ -5,7 +5,9 @@ config:
   hosts:installDisk: /dev/mmcblk0
   hosts:ip: 192.168.1.105
   hosts:clusterIp: 10.69.1.2
-  hosts:vlan:
-    tag: 69
-    name: eth0.69
-    interface: eth0
+  hosts:vlans:
+    eth0.69:
+      id: 69
+      link: eth0
+      addresses:
+        - 10.69.1.2/16

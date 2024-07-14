@@ -5,7 +5,9 @@ config:
   hosts:ip: 192.168.1.107
   hosts:clusterIp: 10.69.2.10
   hosts:installDisk: /dev/sda
-  hosts:vlan:
-    tag: 69
-    name: eth0.69
-    interface: eth0
+  hosts:vlans:
+    eth0.69:
+      id: 69
+      link: eth0
+      addresses:
+        - 10.69.2.10/16

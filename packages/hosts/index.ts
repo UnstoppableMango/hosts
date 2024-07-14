@@ -1,8 +1,8 @@
 import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
 import { Kubeadm, Kubectl, Netplan, Runner } from 'components';
-import * as config from './config';
 import { Network } from 'components/src/netplan';
+import * as config from './config';
 
 const name = config.hostname;
 
@@ -13,31 +13,30 @@ const runner = new Runner({
 
 let networks: Network = {
 	ethernets: config.ethernets,
+	bonds: config.bonds,
+	vlans: config.vlans,
 };
 
-if (config.bond) {
-	runner.run(remote.CopyToRemote, 'systemd-module', {
+let bondingMod: remote.CopyToRemote | undefined;
+let modprobe: remote.Command | undefined;
+
+if (networks.bonds) {
+	bondingMod = runner.run(remote.CopyToRemote, 'systemd-bonding', {
 		remotePath: '/etc/modules-load.d/bonding.conf',
 		source: new pulumi.asset.StringAsset('bonding'),
 	});
 
-	const modprobe = runner.run(remote.Command, 'modprobe', {
+	modprobe = runner.run(remote.Command, 'modprobe', {
 		create: 'modprobe bonding',
 		delete: 'modprobe -r bonding',
-	});
-
-	bond = runner.run(Netplan, 'bond', {
-		config: Netplan.bond(config.bond),
-		file: '/etc/netplan/60-bonding.yaml',
-	}, { dependsOn: ethernets });
+	}, { dependsOn: bondingMod });
 }
 
-if (config.vlan) {
-	vlan = runner.run(Netplan, 'vlan', {
-		config: Netplan.vlan(config, config.vlan),
-		file: '/etc/netplan/69-thecluster-vlan.yaml',
-	}, { dependsOn: bond });
-}
+const netplan = runner.run(Netplan, 'vlan', {
+	config: networks,
+	name: 'thecluster',
+	priority: 69,
+}, { dependsOn: modprobe });
 
 const kubectl = runner.run(Kubectl, name, {
 	arch: config.arch,

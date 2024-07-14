@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Ethernets } from './netplan';
+import { Bond, Ethernet, Vlan } from './netplan';
 
 const AnyPrimitive = z.union([
 	z.string(),
@@ -29,24 +29,11 @@ export const HostNames = z.union([
 	z.literal('pik8s0a'),
 ]);
 
-export const Bond = z.object({
-	name: z.string(),
-	interfaces: z.array(z.string()),
-	addresses: z.array(z.string()),
-	mode: z.string(),
-});
-
-export const Vlan = z.object({
-	tag: z.number(),
-	name: z.string(),
-	interface: z.string(),
-});
-
 export const Node = z.object({
 	arch: Arch,
 	bond: Bond.optional(),
 	clusterIp: z.string(),
-	ethernets: Ethernets.optional(),
+	ethernets: Ethernet.optional(),
 	hostname: HostNames,
 	installDisk: z.string(),
 	ip: z.string(),
@@ -65,9 +52,7 @@ export const Versions = z.object({
 });
 
 export type Arch = z.infer<typeof Arch>;
-export type Bond = z.infer<typeof Bond>;
 export type HostNames = z.infer<typeof HostNames>;
 export type Node = z.infer<typeof Node>;
 export type Role = z.infer<typeof Role>;
 export type Versions = z.infer<typeof Versions>;
-export type Vlan = z.infer<typeof Vlan>;

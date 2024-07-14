@@ -7,7 +7,9 @@ config:
   hosts:installDisk: /dev/sda
   hosts:nodeLabels:
     thecluster.io/zfs: true
-  hosts:vlan:
-    tag: 69
-    name: eno2.69
-    interface: eno2
+  hosts:vlans:
+    eno2.69:
+      id: 69
+      link: eno2
+      addresses:
+        - 10.69.2.2/16
