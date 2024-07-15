@@ -18,10 +18,34 @@ deploy: COMMAND := up
 deploy: $(CONTROL_PLANES) $(WORKERS)
 
 .PHONY: $(HOSTS)
-$(CONTROL_PLANES): install
+$(CONTROL_PLANES): install containerd
 	@$(PULUMI) $(COMMAND) -s '$@'
 $(WORKERS): install $(CONTROL_PLANES)
 	@$(PULUMI) $(COMMAND) -s '$@'
+
+KREL_VERSION := $(shell pulumi config get --path 'versions.krel')
+CONTAINERD_VERSION := $(shell pulumi config get --path 'versions.containerd')
+K8S_URL      := https://raw.githubusercontent.com/kubernetes/release
+
+.PHONY: containerd
+containerd: containerd/config.toml.patch containerd/containerd.service.patch
+
+# Containerd
+containerd/config.toml.patch: containerd/config_default.toml containerd/config.toml
+	diff containerd/config_default.toml containerd/config.toml | tee $@
+
+containerd/config_default.toml:
+	containerd config default > $@
+
+containerd/containerd.service.patch: containerd/containerd_default.service containerd/containerd.service
+	diff containerd/containerd_default.service containerd/containerd.service | tee $@
+
+containerd/containerd_default.service: Pulumi.yaml
+	curl https://raw.githubusercontent.com/containerd/containerd/v${CONTAINERD_VERSION}/containerd.service > $@
+
+# Kubeadm
+kubeadm/10-kubeadm_default.conf: Pulumi.yaml
+	curl -sSL "${K8S_URL}/v${KREL_VERSION}/cmd/krel/templates/latest/kubeadm/10-kubeadm.conf" > $@
 
 stacks:
 	hack/ensure-stacks.sh

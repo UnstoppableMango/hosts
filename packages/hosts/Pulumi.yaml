@@ -11,6 +11,7 @@ config:
   versions:
     value:
       containerd: 1.7.19
+      etcd: 3.5.14
       k8s: 1.30.2
       ksca: 0.8.3
       talos: 1.6.5
@@ -18,3 +19,15 @@ config:
       crictl: 1.30.0
       cniPlugins: 1.5.1
       krel: 0.16.2
+      kubeVip: 0.8.1
+  clusterEndpoint: 192.168.1.100
+  kubernetesDirectory: /etc/kubernetes
+  systemdDirectory: /etc/systemd/system
+  controlplanes:
+    value:
+      - hostname: pik8s4
+        ip: 192.168.1.104
+      - hostname: pik8s5
+        ip: 192.168.1.105
+      - hostname: pik8s6
+        ip: 192.168.1.106

@@ -3,6 +3,19 @@ import { PrivateKey } from '@pulumi/tls';
 import { Arch, Bond, Ethernet, HostNames, Role, Versions, Vlan } from 'components';
 import { z } from 'zod';
 
+const HostInfo = z.object({
+	hostname: z.string(),
+	ip: z.string(),
+});
+
+const CaPair = z.object({
+	privateKeyPem: z.string(),
+	certPem: z.string(),
+});
+
+export type HostInfo = z.infer<typeof HostInfo>;
+export type CaPair = z.infer<typeof CaPair>;
+
 const config = new Config();
 
 const getZod = <T>(parser: z.ZodType<T>, key: string): T | undefined => {
@@ -15,13 +28,18 @@ const requireZod = <T>(parser: z.ZodType<T>, key: string): T => {
 
 export const arch = config.require<Arch>('arch');
 export const bonds = getZod(z.record(Bond), 'bonds');
+export const clusterEndpoint = config.require('clusterEndpoint');
 export const clusterIp = config.require('clusterIp');
+export const controlplanes = requireZod(z.array(HostInfo), 'controlplanes');
 export const ethernets = getZod(z.record(Ethernet), 'ethernets');
 export const hostname = config.require<HostNames>('hostname');
 export const installDisk = config.require('installDisk');
 export const ip = config.require('ip');
+export const kubernetesDirectory = config.require('kubernetesDirectory');
 export const role = config.require<Role>('role');
+export const systemdDirectory = config.require('systemdDirectory');
 export const versions = requireZod(Versions, 'versions');
+export const vipInterface = config.get('vipInterface');
 export const vlans = requireZod(z.record(Vlan), 'vlans');
 
 const pkiRef = new StackReference('pki', {
@@ -31,3 +49,6 @@ const pkiRef = new StackReference('pki', {
 export const loginKey = pkiRef.requireOutput('hostKeys')
 	.apply(keys => keys[hostname] as PrivateKey)
 	.apply(x => x.privateKeyOpenssh);
+
+export const etcdCa = pkiRef.requireOutput('etcd')
+	.apply(x => x as CaPair);

@@ -9,12 +9,16 @@ export interface CrictlArgs extends CommandComponentArgs {
 
 export class Crictl extends CommandComponent {
 	constructor(name: string, args: CrictlArgs, opts?: ComponentResourceOptions) {
-		super(`thecluster:infra:Crictl/${name}`, name, args, opts);
+		super('hosts:index:Crictl', name, args, opts);
 		if (opts?.urn) return;
 
-		this.exec(CrictlInstall, 'crictl', {
+		const install = this.exec(CrictlInstall, name, {
 			architecture: args.arch,
 			version: args.version,
+		});
+
+		this.registerOutputs({
+			install,
 		});
 	}
 }

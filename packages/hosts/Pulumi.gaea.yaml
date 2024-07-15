@@ -3,7 +3,7 @@ config:
   hosts:role: worker
   hosts:arch: amd64
   hosts:ip: 192.168.1.11
-  hosts:clusterIp: 10.69.2.2
+  hosts:clusterIp: 192.168.1.11
   hosts:installDisk: /dev/sda
   hosts:nodeLabels:
     thecluster.io/zfs: true

@@ -9,12 +9,16 @@ export interface RuncArgs extends CommandComponentArgs {
 
 export class Runc extends CommandComponent {
 	constructor(name: string, args: RuncArgs, opts?: ComponentResourceOptions) {
-		super(`thecluster:infra:Runc/${name}`, name, args, opts);
+		super('hosts:index:Runc', name, args, opts);
 		if (opts?.urn) return;
 
-		this.exec(RuncInstall, 'runc', {
+		const install = this.exec(RuncInstall, name, {
 			architecture: args.arch,
 			version: args.version,
+		});
+
+		this.registerOutputs({
+			install,
 		});
 	}
 }

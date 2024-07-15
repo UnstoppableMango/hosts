@@ -4,7 +4,8 @@ config:
   hosts:arch: arm64
   hosts:installDisk: /dev/mmcblk0
   hosts:ip: 192.168.1.104
-  hosts:clusterIp: 10.69.1.1
+  hosts:clusterIp: 192.168.1.104
+  hosts:vipInterface: eth0
   hosts:vlans:
     eth0.69:
       id: 69

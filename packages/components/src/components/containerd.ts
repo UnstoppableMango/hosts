@@ -1,54 +1,63 @@
 import { remote } from '@pulumi/command';
-import { asset, ComponentResourceOptions, Input, interpolate, output } from '@pulumi/pulumi';
-import { Mkdir, Wget } from '@unmango/pulumi-commandx/remote';
+import { asset, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { Architecture, ContainerdInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface ContainerdArgs extends CommandComponentArgs {
 	arch: Architecture;
+	systemdDirectory: Input<string>;
 	version: Input<string>;
 }
 
 export class Containerd extends CommandComponent {
+	public readonly socketPath!: Output<string>;
+	public readonly configDirectory!: Output<string>;
+
 	constructor(name: string, args: ContainerdArgs, opts?: ComponentResourceOptions) {
-		super(`thecluster:infra:Containerd/${name}`, name, args, opts);
+		super('hosts:index:Containerd', name, args, opts);
 		if (opts?.urn) return;
 
+		const configDirectory = output('/etc/containerd');
+		const serviceName = output('containerd');
+		const socketPath = output('unix:///run/containerd/containerd.sock');
+		const systemdDirectory = output(args.systemdDirectory);
 		const version = output(args.version);
 
-		const install = this.exec(ContainerdInstall, 'containerd', {
+		const install = this.exec(ContainerdInstall, name, {
 			architecture: args.arch,
 			version,
 		});
 
-		const systemdDirectory = '/usr/local/lib/systemd/system';
-		const systemdService = this.exec(Wget, 'containerd-systemd', {
-			create: {
-				url: [
-					interpolate`https://raw.githubusercontent.com/containerd/containerd/v${version}/containerd.service`,
-				],
-				directoryPrefix: systemdDirectory,
-			},
-			delete: `rm '${systemdDirectory}/containerd.service'`,
-		});
-
-		const start = this.exec(remote.Command, 'containerd-start', {
-			create: 'systemctl daemon-reload && systemctl enable --now containerd',
-			delete: 'systemctl disable --now containerd',
-		}, { dependsOn: [install, systemdService] });
-
-		const mkdir = this.exec(Mkdir, 'etc-containerd', {
-			create: { parents: true, directory: '/etc/containerd' },
-		});
-
-		const config = this.exec(remote.CopyToRemote, 'containerd-config', {
+		const mkdir = this.mkdir('config-mkdir', configDirectory);
+		const config = this.exec(remote.CopyToRemote, 'config', {
+			remotePath: interpolate`${configDirectory}/config.toml`,
 			source: new asset.FileAsset('./containerd/config.toml'),
-			remotePath: '/etc/containerd/config.toml',
 		}, { dependsOn: mkdir });
 
-		const applyConfig = this.exec(remote.Command, 'apply-config', {
-			update: 'systecmtcl restart containerd',
-			triggers: [config],
-		}, { dependsOn: start });
+		const systemdService = this.exec(remote.CopyToRemote, 'systemd-service', {
+			remotePath: interpolate`${systemdDirectory}/containerd.service`,
+			source: new asset.FileAsset('./containerd/containerd.service'),
+		});
+
+		const start = this.cmd('start-service', {
+			create: interpolate`systemctl daemon-reload && systemctl enable --now ${serviceName}`,
+			delete: interpolate`systemctl disable --now ${serviceName}`,
+			triggers: [systemdService.source],
+		}, {
+			dependsOn: [
+				install,
+				config,
+				systemdService,
+			],
+		});
+
+		this.configDirectory = configDirectory;
+		this.socketPath = socketPath;
+
+		this.registerOutputs({
+			configDirectory,
+			install,
+			socketPath,
+		});
 	}
 }
