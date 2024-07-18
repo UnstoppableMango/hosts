@@ -1,5 +1,8 @@
 import { remote } from '@pulumi/command';
-import { remote as inputs } from '@pulumi/command/types/input';
+import { Resource } from '@pulumi/pulumi';
+import * as A from './args';
+import * as P from './parent';
+import { AnyOpts, HasConnection, RemoteResourceConstructor } from './remoteResource';
 
 export const URI = 'Command';
 export type URI = typeof URI;
@@ -11,5 +14,15 @@ declare module 'fp-ts/HKT' {
 }
 
 export type Command<T> = {
-	(connection: inputs.ConnectionArgs): remote.Command;
+	(name: string, args: A.Args<T>, opts?: P.Parent<T>): T;
 };
+
+export const of = <T, U extends HasConnection, V extends AnyOpts>(
+	ctor: RemoteResourceConstructor<T, U, V>,
+): Command<T> => {
+	return (name, args, opts) => new ctor(name);
+};
+
+const a = A.connect({ host: '' });
+const o = P.child({} as Resource);
+const temp = of(remote.Command)('', a, o);
