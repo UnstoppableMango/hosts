@@ -1,5 +1,5 @@
-import { remote } from '@pulumi/command/types/input';
 import { HasConnection } from './remoteResource';
+import * as W from './with';
 
 export const URI = 'Args';
 export type URI = typeof URI;
@@ -10,12 +10,10 @@ declare module 'fp-ts/HKT' {
 	}
 }
 
-export type Args<T> = {
-	(partial: T): T;
-};
+export type Args<T> = T extends HasConnection ? W.With<T, 'connection'> : never;
 
 export const connect = <T extends HasConnection>(
-	connection: remote.ConnectionArgs,
-): Args<T> => {
-	return (args) => ({ ...args, connection });
+	connection: T['connection'],
+): W.With<T, 'connection'> => {
+	return W.of<T, 'connection'>('connection', connection);
 };
