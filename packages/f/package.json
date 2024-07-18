@@ -1,0 +1,10 @@
+{
+  "name": "f",
+  "version": "0.0.1",
+  "description": "An outlet for my functional itch",
+  "main": "index.ts",
+  "repository": "https://github.com/UnstoppableMango",
+  "author": "UnstoppableMango",
+  "license": "MIT",
+  "private": true
+}
