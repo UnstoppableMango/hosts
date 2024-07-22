@@ -8,15 +8,23 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "echo",
+	Use: "deploy",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
-		work, err := auto.NewLocalWorkspace(ctx)
+
+		tmp, err := os.MkdirTemp(os.TempDir(), "")
 		if err != nil {
 			return err
 		}
 
-		err = work.SelectStack(ctx, "cp")
+		workspace, err := auto.NewLocalWorkspace(ctx,
+			auto.WorkDir(""),
+		)
+		if err != nil {
+			return err
+		}
+
+		err = workspace.SelectStack(ctx, "cp")
 		if err != nil {
 			return err
 		}
