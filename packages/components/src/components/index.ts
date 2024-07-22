@@ -1,6 +1,7 @@
 export * from './cniPlugins';
 export * from './containerd';
 export * from './crictl';
+export * from './directory';
 export * from './etcd';
 export * from './ipv4PacketForwarding';
 export * from './kubeadm';

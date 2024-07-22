@@ -1,9 +1,10 @@
-import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { all, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import * as systemd from '../systemd';
 import * as YAML from '../yaml';
 import { BinaryInstall } from './binaryInstall';
 import { CommandComponent, CommandComponentArgs } from './command';
+import { Directory } from './directory';
 
 export interface KubeletArgs extends CommandComponentArgs {
 	arch: Architecture;
@@ -34,13 +35,19 @@ export class Kubelet extends CommandComponent {
 		const url = interpolate`https://dl.k8s.io/release/v${version}/bin/linux/${arch}/${binName}`;
 		const install = this.exec(BinaryInstall, name, { binName, url });
 
-		const configDir = interpolate`${k8sDir}/kubelet.conf.d`;
-		const configMkdir = this.mkdir('config-mkdir', configDir);
+		// const configDir = interpolate`${k8sDir}/kubelet.conf.d`;
+		// const configMkdir = this.mkdir('config-mkdir', configDir);
 
 		const manifestDir = interpolate`${k8sDir}/manifests`;
 		const manifestsMkdir = this.mkdir('manifests', manifestDir);
 
-		const configPath = interpolate`${k8sDir}/kubelet.conf`;
+		const configDir = this.exec(Directory, 'var-lib', {
+			path: '/var/lib/kubelet',
+		});
+
+		// I think kubeadm puts the kubeconfig here
+		// const configPath = interpolate`${k8sDir}/kubelet.conf`;
+		const configPath = interpolate`${configDir.path}/kubelet.conf`;
 		const config = this.tee('config-tee', {
 			path: configPath,
 			content: YAML.stringify({
@@ -78,12 +85,9 @@ export class Kubelet extends CommandComponent {
 						// This is a file that "kubeadm init" and "kubeadm join" generates at runtime, populating the KUBELET_KUBEADM_ARGS variable dynamically
 						interpolate`-/var/lib/kubelet/kubeadm-flags.env`,
 					],
-					execStart: output([
+					execStart: all([
 						install.path,
 						interpolate`--config=${configPath}`,
-						interpolate`--config-dir=${configDir}`,
-						// interpolate`--bootstrap-kubeconfig=${bootstrapKubeconfig}`,
-						// interpolate`--kubeconfig=${kubeconfig}`,
 						interpolate`$KUBELET_KUBEADM_ARGS`,
 					]).apply(x => x.join(' ')),
 					restart: 'always',
@@ -97,14 +101,14 @@ export class Kubelet extends CommandComponent {
 		});
 
 		const start = this.cmd('start', {
-			create: interpolate`systemctl daemon-reload && systemctl enable --now ${serviceName}`,
+			create: interpolate`systemctl daemon-reload && systemctl enable ${serviceName}`,
 			delete: interpolate`systemctl disable --now ${serviceName}`,
 			triggers: [systemdService.stdin],
 		}, {
 			dependsOn: [
 				install,
 				config,
-				configMkdir,
+				configDir,
 				manifestsMkdir,
 				systemdService,
 			],
@@ -114,12 +118,12 @@ export class Kubelet extends CommandComponent {
 
 		this.registerOutputs({
 			install,
-			configPath,
-			configMkdir,
+			configDir,
 			manifestDir,
 			manifestsMkdir,
 			config,
 			systemdService,
+			start,
 		});
 	}
 }

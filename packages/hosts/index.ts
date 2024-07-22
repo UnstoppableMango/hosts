@@ -10,11 +10,12 @@ import {
 	Kubectl,
 	Kubelet,
 	KubeVip,
+	Network,
 	Netplan,
 	Runc,
 	Runner,
+	Directory,
 } from 'components';
-import { Network } from 'components/src/netplan';
 import * as config from './config';
 
 const name = config.hostname;
@@ -51,12 +52,15 @@ const netplan = runner.run(Netplan, name, {
 	priority: 69,
 }, { dependsOn: modprobe });
 
-const k8sDir = config.kubernetesDirectory;
-const k8sConfigMkdir = runner.run(remote.Command, 'kubernetes-config', {
-	create: pulumi.interpolate`mkdir -p ${k8sDir}`,
-	delete: pulumi.interpolate`rm -rf ${k8sDir}`,
-	triggers: [k8sDir],
-}, { deleteBeforeReplace: true });
+const ipv4Forwarding = runner.run(Ipv4PacketForwarding, name, {});
+
+const k8sDir = runner.run(Directory, 'kubernetes-config', {
+	path: config.kubernetesDirectory,
+});
+
+const pkiDir = runner.run(Directory, 'pki', {
+	path: pulumi.interpolate`${k8sDir.path}/pki`,
+}, { dependsOn: k8sDir });
 
 const kubectl = runner.run(Kubectl, name, {
 	arch: config.arch,
@@ -66,10 +70,14 @@ const kubectl = runner.run(Kubectl, name, {
 const kubeadm = runner.run(Kubeadm, name, {
 	arch: config.arch,
 	version: config.versions.k8s,
+	clusterEndpoint: config.clusterEndpoint,
 	hostname: name,
 	hosts: config.controlplanes,
-	kubernetesDirectory: k8sDir,
-}, { dependsOn: netplan });
+	kubernetesDirectory: k8sDir.path,
+	certificatesDirectory: pkiDir.path,
+	caCertPem: config.theclusterCa.certPem,
+	caKeyPem: config.theclusterCa.privateKeyPem,
+}, { dependsOn: [netplan, pkiDir] });
 
 const crictl = runner.run(Crictl, name, {
 	arch: config.arch,
@@ -87,15 +95,19 @@ const containerd = runner.run(Containerd, name, {
 	systemdDirectory: config.systemdDirectory,
 }, { dependsOn: runc });
 
+const imagePull = runner.run(remote.Command, 'pull-images', {
+	create: `kubeadm config images pull`,
+}, { dependsOn: [containerd, kubeadm] });
+
 const kubelet = runner.run(Kubelet, name, {
 	arch: config.arch,
 	version: config.versions.k8s,
-	kubernetesDirectory: k8sDir,
+	kubernetesDirectory: k8sDir.path,
 	systemdDirectory: config.systemdDirectory,
 	bootstrapKubeconfig: '/etc/kubernetes/bootstrap-kubelet.conf',
 	kubeconfig: '/etc/kubernetes/kubelet.conf',
 	containerdSocket: containerd.socketPath,
-}, { dependsOn: [containerd, k8sConfigMkdir] });
+}, { dependsOn: [containerd, k8sDir] });
 
 if (config.role === 'controlplane') {
 	if (!config.vipInterface) {
@@ -105,39 +117,44 @@ if (config.role === 'controlplane') {
 	const kubeVip = runner.run(KubeVip, name, {
 		clusterEndpoint: config.clusterEndpoint,
 		interface: config.vipInterface,
-		kubeconfigPath: pulumi.interpolate`${k8sDir}/admin.conf`, // Create this
+		kubeconfigPath: pulumi.interpolate`${k8sDir.path}/admin.conf`, // I think kubeadm init creates this
 		version: config.versions.kubeVip,
 		manifestDir: kubelet.manifestDir,
-	}, { dependsOn: [k8sConfigMkdir, kubelet] });
+	}, { dependsOn: [k8sDir, kubelet] });
 
 	const etcd = runner.run(Etcd, name, {
 		arch: config.arch,
 		version: config.versions.etcd,
 		caCertPem: config.etcdCa.certPem,
 		caKeyPem: config.etcdCa.privateKeyPem,
+		manifestDir: kubelet.manifestDir,
+		certsDirectory: pkiDir.path,
 		kubeadmcfgPath: kubeadm.configurationPath,
 	}, { dependsOn: [containerd, kubelet, kubeadm] });
 
-	const init = runner.run(remote.Command, 'kubeadm-init', {
-		create: pulumi.interpolate`kubeadm init --control-plane-endpoint ${config.clusterEndpoint}`,
-	});
+	if (config.hostname === config.bootstrapNode) {
+		const init = runner.run(remote.Command, 'kubeadm-init', {
+			create: pulumi.all([
+				pulumi.interpolate`kubeadm init`,
+				pulumi.interpolate`--config ${kubeadm.configurationPath}`,
+			]).apply(x => x.join(' ')),
+		}, {
+			dependsOn: [
+				ipv4Forwarding,
+				kubeadm,
+				imagePull,
+				etcd,
+				kubeVip,
+				kubelet,
+				kubectl,
+			],
+		});
+	}
 }
 
 if (config.role === 'worker') {
-	runner.run(Ipv4PacketForwarding, name, {});
-
 	runner.run(CniPlugins, name, {
 		arch: config.arch,
 		version: config.versions.cniPlugins,
 	});
 }
-
-// const init = runner.run(remote.Command, 'kubeadm-init', {
-// 	create: pulumi.interpolate`${kubeadm.path} init --control-plane-endpoint ${config.clusterEndpoint}`,
-// }, {
-// 	dependsOn: [
-// 		containerd,
-// 		kubelet,
-// 		kubeadm,
-// 	],
-// });

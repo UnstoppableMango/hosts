@@ -16,7 +16,9 @@ export class Directory extends CommandComponent {
 
 		const mkdir = this.cmd(name, {
 			create: interpolate`mkdir -p ${path}`,
-		});
+			delete: interpolate`rm -rf ${path}`,
+			triggers: [path],
+		}, { deleteBeforeReplace: true });
 
 		this.path = path;
 

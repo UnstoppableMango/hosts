@@ -28,6 +28,7 @@ const requireZod = <T>(parser: z.ZodType<T>, key: string): T => {
 
 export const arch = config.require<Arch>('arch');
 export const bonds = getZod(z.record(Bond), 'bonds');
+export const bootstrapNode = config.require('bootstrapNode');
 export const clusterEndpoint = config.require('clusterEndpoint');
 export const clusterIp = config.require('clusterIp');
 export const controlplanes = requireZod(z.array(HostInfo), 'controlplanes');
@@ -51,4 +52,7 @@ export const loginKey = pkiRef.requireOutput('hostKeys')
 	.apply(x => x.privateKeyOpenssh);
 
 export const etcdCa = pkiRef.requireOutput('etcd')
+	.apply(x => x as CaPair);
+
+export const theclusterCa = pkiRef.requireOutput('thecluster')
 	.apply(x => x as CaPair);

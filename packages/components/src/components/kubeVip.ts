@@ -1,6 +1,6 @@
 import { ComponentResourceOptions, Input, interpolate } from '@pulumi/pulumi';
-import { CommandComponent, CommandComponentArgs } from './command';
 import * as YAML from '../yaml';
+import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface KubeVipArgs extends CommandComponentArgs {
 	clusterEndpoint: Input<string>;
