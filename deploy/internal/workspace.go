@@ -25,7 +25,7 @@ func NewWorkspace(ctx context.Context, opts *WorkspaceOptions) (Workspace, error
 	root := opts.Root
 	log := opts.Logger
 
-	log.Info("Reading pulumi version")
+	log.Debug("Reading pulumi version")
 	versionFile := path.Join(root, ".versions", "pulumi")
 	versionBytes, err := os.ReadFile(versionFile)
 	if err != nil {
@@ -33,10 +33,10 @@ func NewWorkspace(ctx context.Context, opts *WorkspaceOptions) (Workspace, error
 	}
 
 	version := strings.TrimSpace(string(versionBytes))
-	log.Info("Pulumi version", "version", version)
+	log.Debug("Pulumi version", "version", version)
 
 	binDir := path.Join(root, "bin", "pulumi")
-	log.Info("Install pulumi command", "binDir", binDir)
+	log.Debug("Install pulumi command", "binDir", binDir)
 	installPulumi, err := auto.InstallPulumiCommand(ctx, &auto.PulumiCommandOptions{
 		Version: semver.MustParse(version),
 		Root:    binDir,
@@ -54,7 +54,7 @@ func NewWorkspace(ctx context.Context, opts *WorkspaceOptions) (Workspace, error
 	// 	return err
 	// }
 
-	log.Info("Creating workspace/installing", "programPath", programPath)
+	log.Debug("Creating workspace/installing", "programPath", programPath)
 	work, err := auto.NewLocalWorkspace(ctx,
 		auto.WorkDir(programPath),
 		auto.Pulumi(installPulumi),
@@ -70,6 +70,6 @@ func NewWorkspace(ctx context.Context, opts *WorkspaceOptions) (Workspace, error
 
 // GetHost implements Workspace.
 func (w *WorkspaceOptions) GetHost(ctx context.Context, name string) (Host, error) {
-	w.Logger.Info("Creating host")
+	w.Logger.Debug("Creating host")
 	return NewHost(ctx, name, &HostOpts{WorkspaceOptions: *w})
 }
