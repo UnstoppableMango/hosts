@@ -3,34 +3,14 @@ package cmd
 import (
 	"os"
 
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/spf13/cobra"
+	hosts "github.com/unstoppablemango/hosts/deploy/internal"
 )
+
+var log = hosts.NewLogger()
 
 var rootCmd = &cobra.Command{
 	Use: "deploy",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := cmd.Context()
-
-		tmp, err := os.MkdirTemp(os.TempDir(), "")
-		if err != nil {
-			return err
-		}
-
-		workspace, err := auto.NewLocalWorkspace(ctx,
-			auto.WorkDir(""),
-		)
-		if err != nil {
-			return err
-		}
-
-		err = workspace.SelectStack(ctx, "cp")
-		if err != nil {
-			return err
-		}
-
-		return nil
-	},
 }
 
 func Execute() {

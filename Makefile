@@ -8,8 +8,10 @@ PULUMI := pulumi -C ${PROGRAM_DIR}
 HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
 
 .PHONY: $(HOSTS) preview deploy components format
+# preview: components
+# 	@$(MAKE) -C ${PROGRAM_DIR} $@ --no-print-directory
 preview: components
-	@$(MAKE) -C ${PROGRAM_DIR} $@ --no-print-directory
+	cd deploy && go run ./... preview
 deploy: components
 	@$(MAKE) -C ${PROGRAM_DIR} $@ --no-print-directory
 
