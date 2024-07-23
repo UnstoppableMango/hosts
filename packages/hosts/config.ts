@@ -42,6 +42,9 @@ export const systemdDirectory = config.require('systemdDirectory');
 export const versions = requireZod(Versions, 'versions');
 export const vipInterface = config.get('vipInterface');
 export const vlans = requireZod(z.record(Vlan), 'vlans');
+export const workers = requireZod(z.array(HostInfo), 'workers');
+
+export const hosts = [...controlplanes, ...workers];
 
 const pkiRef = new StackReference('pki', {
 	name: 'UnstoppableMango/pki/prod',

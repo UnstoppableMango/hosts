@@ -32,3 +32,13 @@ config:
         ip: 192.168.1.105
       - hostname: pik8s6
         ip: 192.168.1.106
+  workers:
+    value:
+      - hostname: zeus
+        ip: 192.168.1.10
+      - hostname: gaea
+        ip: 192.168.1.11
+      - hostname: vrk8s1
+        ip: 192.168.1.107
+      - hostname: pik8s8
+        ip: 192.168.1.108

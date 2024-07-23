@@ -72,7 +72,7 @@ const kubeadm = runner.run(Kubeadm, name, {
 	version: config.versions.k8s,
 	clusterEndpoint: config.clusterEndpoint,
 	hostname: name,
-	hosts: config.controlplanes,
+	hosts: config.hosts,
 	kubernetesDirectory: k8sDir.path,
 	certificatesDirectory: pkiDir.path,
 	caCertPem: config.theclusterCa.certPem,
