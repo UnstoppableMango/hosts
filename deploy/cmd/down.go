@@ -6,12 +6,12 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(previewCmd)
+	rootCmd.AddCommand(downCmd)
 }
 
-var previewCmd = &cobra.Command{
-	Use:     "preview",
-	Aliases: []string{"p"},
+var downCmd = &cobra.Command{
+	Use:     "down",
+	Aliases: []string{"d"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 
@@ -34,7 +34,7 @@ var previewCmd = &cobra.Command{
 			return err
 		}
 
-		log.Info("Previewing host")
-		return host.Preview(ctx)
+		log.Info("Destroying host")
+		return host.Down(ctx)
 	},
 }

@@ -2,7 +2,6 @@ package hosts
 
 import (
 	"context"
-	"io"
 	"os"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
@@ -12,7 +11,6 @@ import (
 )
 
 type Host interface {
-	io.Closer
 	Down(context.Context) error
 	Preview(context.Context) error
 	Up(context.Context) error
@@ -40,7 +38,7 @@ func NewHost(ctx context.Context, name string, opts *HostOpts) (Host, error) {
 
 // Down implements Host.
 func (h *HostOpts) Down(ctx context.Context) error {
-	h.Logger.Info("Destroying stack")
+	h.Logger.Debug("Destroying stack")
 	_, err := h.stack.Destroy(ctx,
 		optdestroy.ProgressStreams(os.Stdout),
 	)
@@ -53,7 +51,7 @@ func (h *HostOpts) Down(ctx context.Context) error {
 
 // Preview implements Host.
 func (h *HostOpts) Preview(ctx context.Context) error {
-	h.Logger.Info("Previewing stack")
+	h.Logger.Debug("Previewing stack")
 	_, err := h.stack.Preview(ctx,
 		optpreview.ProgressStreams(os.Stdout),
 	)
@@ -66,7 +64,7 @@ func (h *HostOpts) Preview(ctx context.Context) error {
 
 // Up implements Host.
 func (h *HostOpts) Up(ctx context.Context) error {
-	h.Logger.Info("Updating stack")
+	h.Logger.Debug("Updating stack")
 	_, err := h.stack.Up(ctx,
 		optup.ProgressStreams(os.Stdout),
 	)
@@ -74,12 +72,5 @@ func (h *HostOpts) Up(ctx context.Context) error {
 		return err
 	}
 
-	return nil
-}
-
-// Close implements Host.
-func (h *HostOpts) Close() error {
-	// h.log.Info("Removing working directory")
-	// return os.Remove(h.path)
 	return nil
 }
