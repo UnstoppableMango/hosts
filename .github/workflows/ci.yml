@@ -66,6 +66,7 @@ jobs:
         run: sleep $((${{ strategy.job-index }} * 5))
 
       - name: Pulumi login
+        if: false # This is being a pain in the ass
         uses: pulumi/auth-actions@v1
         with:
           organization: UnstoppableMango
