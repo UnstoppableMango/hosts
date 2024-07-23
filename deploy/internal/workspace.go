@@ -9,6 +9,7 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
 )
 
 type Workspace interface {
@@ -16,9 +17,10 @@ type Workspace interface {
 }
 
 type WorkspaceOptions struct {
-	pulumi auto.Workspace
-	Root   string
-	Logger *slog.Logger
+	pulumi      auto.Workspace
+	Root        string
+	Logger      *slog.Logger
+	eventStream chan events.EngineEvent
 }
 
 func NewWorkspace(ctx context.Context, opts *WorkspaceOptions) (Workspace, error) {
@@ -64,6 +66,7 @@ func NewWorkspace(ctx context.Context, opts *WorkspaceOptions) (Workspace, error
 	}
 
 	opts.pulumi = work
+	opts.eventStream = make(chan events.EngineEvent)
 
 	return opts, nil
 }
