@@ -66,6 +66,7 @@ jobs:
         run: sleep $((${{ strategy.job-index }} * 5))
 
       - name: Pulumi login
+        if: false # This is being a pain in the ass
         uses: pulumi/auth-actions@v1
         with:
           organization: UnstoppableMango
@@ -81,3 +82,21 @@ jobs:
           refresh: true
           pulumi-version-file: .versions/pulumi
           expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: deploy/go.mod
+          cache-dependency-path: deploy/go.sum
+          cache: true
+
+      - name: Go Build
+        run: make bin/deploy
