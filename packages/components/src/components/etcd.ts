@@ -1,10 +1,4 @@
-import {
-	ComponentResourceOptions,
-	Input,
-	interpolate,
-	Output,
-	output,
-} from '@pulumi/pulumi';
+import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { Architecture, EtcdInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import { CommandComponent, CommandComponentArgs } from './command';
 import { Directory } from './directory';

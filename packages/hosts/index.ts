@@ -4,17 +4,17 @@ import {
 	CniPlugins,
 	Containerd,
 	Crictl,
+	Directory,
 	Etcd,
 	Ipv4PacketForwarding,
 	Kubeadm,
 	Kubectl,
 	Kubelet,
 	KubeVip,
-	Network,
 	Netplan,
+	Network,
 	Runc,
 	Runner,
-	Directory,
 } from 'components';
 import * as config from './config';
 

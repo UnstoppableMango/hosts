@@ -23,11 +23,11 @@ export type Connection<A> = {
 	(connection: remote.ConnectionArgs): A;
 };
 
-export const of = <T, U extends HasConnection, V extends AnyOpts>(
-	Resource: RemoteResource<T, U, V>,
-	name: string,
-	args: RunArgs<U>,
-	opts?: RunOpts<V>,
-): Connection<T> => {
-	return (c) => new Resource(name, { ...args, connection: c }, opts);
-};
+// export const of = <T, U extends HasConnection, V extends AnyOpts>(
+// 	Resource: RemoteResource<T, U, V>,
+// 	name: string,
+// 	args: RunArgs<U>,
+// 	opts?: RunOpts<V>,
+// ): Connection<T> => {
+// 	return (c) => new Resource(name, { ...args, connection: c }, opts);
+// };
