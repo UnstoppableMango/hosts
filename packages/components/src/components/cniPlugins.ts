@@ -1,5 +1,4 @@
 import { ComponentResourceOptions, Input, Output } from '@pulumi/pulumi';
-import { Mkdir } from '@unmango/pulumi-commandx/remote';
 import { Architecture, CniPluginsInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import { CommandComponent, CommandComponentArgs } from './command';
 
@@ -12,17 +11,13 @@ export class CniPlugins extends CommandComponent {
 	public readonly directory!: Output<string>;
 
 	constructor(name: string, args: CniPluginsArgs, opts?: ComponentResourceOptions) {
-		super(`thecluster:infra:CniPlugins/${name}`, name, args, opts);
+		super('hosts:index:CniPlugins', name, args, opts);
 		if (opts?.urn) return;
 
 		const directory = '/opt/cni/bin';
 
-		const mkdir = this.exec(Mkdir, 'cni', {
-			create: { parents: true, directory },
-			delete: `rm -rf ${directory}`,
-		});
-
-		const install = this.exec(CniPluginsInstall, 'cni', {
+		const mkdir = this.mkdir('bin-mkdir', directory);
+		const install = this.exec(CniPluginsInstall, name, {
 			architecture: args.arch,
 			directory,
 			version: args.version,
@@ -32,6 +27,7 @@ export class CniPlugins extends CommandComponent {
 
 		this.registerOutputs({
 			directory: this.directory,
+			install,
 		});
 	}
 }

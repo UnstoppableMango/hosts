@@ -1,9 +1,7 @@
 import { remote } from '@pulumi/command';
-import { ComponentResourceOptions, Input, Inputs, interpolate, Output, output } from '@pulumi/pulumi';
-import { Chmod, Tee } from '@unmango/pulumi-commandx/remote';
+import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import * as YAML from 'yaml';
-import { Bond, NetplanConfig, Network, Vlan } from '../netplan';
-import type { Node } from '../types';
+import { NetplanConfig, Network } from '../netplan';
 import { CommandComponent, CommandComponentArgs } from './command';
 
 export interface NetplanArgs extends CommandComponentArgs {
@@ -14,18 +12,18 @@ export interface NetplanArgs extends CommandComponentArgs {
 
 export class Netplan extends CommandComponent {
 	public readonly remove!: remote.Command;
-	public readonly configTee!: Tee;
-	public readonly configChmod!: Chmod;
+	public readonly configTee!: remote.Command;
+	public readonly configChmod!: remote.Command;
 	public readonly apply!: remote.Command;
 	public readonly file!: Output<string>;
 	public readonly content!: Output<string>;
 
 	constructor(name: string, args: NetplanArgs, opts?: ComponentResourceOptions) {
-		super(`thecluster:infra:Netplan/${name}`, name, args, opts);
+		super('hosts:index:Netplan', name, args, opts);
 		if (opts?.urn) return;
 
 		const file = interpolate`/etc/netplan/${args.priority}-${args.name}.yaml`;
-		const remove = this.exec(remote.Command, 'remove-netplan', {
+		const remove = this.cmd('remove-netplan', {
 			delete: 'netplan apply',
 		});
 
@@ -33,19 +31,19 @@ export class Netplan extends CommandComponent {
 			.apply<NetplanConfig>(network => ({ network }))
 			.apply(YAML.stringify);
 
-		const config = this.exec(Tee, 'netplan', {
-			stdin: content,
-			create: { files: [file] },
-			delete: interpolate`rm -f ${file}`,
+		const config = this.tee(`config-tee`, {
+			content: content,
+			path: file,
 		}, { dependsOn: remove });
 
-		// TODO: I think this still isn't working
-		const chmod = this.exec(Chmod, 'netplan', {
-			create: { files: [file], mode: '600' },
+		const chmod = this.chmod('config-chmod', {
+			mode: '600',
+			path: file,
 		}, { dependsOn: config });
 
-		const apply = this.exec(remote.Command, 'apply-netplan', {
+		const apply = this.cmd('apply-netplan', {
 			create: 'netplan apply',
+			triggers: [config.stdin],
 		}, { dependsOn: [config, chmod] });
 
 		this.remove = remove;
@@ -77,22 +75,6 @@ export class Netplan extends CommandComponent {
 	// 						'transmit-hash-policy': 'layer3+4',
 	// 						'mii-monitor-interval': 1,
 	// 					},
-	// 				},
-	// 			},
-	// 		},
-	// 	};
-	// }
-
-	// public static vlan(node: Node, vlan: Vlan): Inputs {
-	// 	return {
-	// 		network: {
-	// 			vlans: {
-	// 				[vlan.name]: {
-	// 					id: vlan.tag,
-	// 					link: vlan.interface,
-	// 					addresses: [
-	// 						`${node.clusterIp}/16`,
-	// 					],
 	// 				},
 	// 			},
 	// 		},

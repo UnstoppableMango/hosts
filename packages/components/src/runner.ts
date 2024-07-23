@@ -6,23 +6,23 @@ type RunArgs<T extends HasConnection> = Omit<T, 'connection'>;
 type AnyOpts = CustomResourceOptions | ComponentResourceOptions;
 type RunOpts<T extends AnyOpts> = Omit<T, 'parent'>;
 
-type RemoteResource<T, V extends HasConnection> = {
-	new(name: string, args: V, opts?: AnyOpts): T;
+type RemoteResource<T, U extends HasConnection, V extends AnyOpts> = {
+	new(name: string, args: U, opts?: V): T;
 };
 
 export type Run<T extends Resource, U extends HasConnection, V extends AnyOpts> = {
-	(ctor: RemoteResource<T, U>, name: string, args: RunArgs<U>, opts?: RunOpts<V>): T;
+	(ctor: RemoteResource<T, U, V>, name: string, args: RunArgs<U>, opts?: RunOpts<V>): T;
 };
 
 export class Runner {
 	constructor(private connection: inputs.ConnectionArgs) {}
 	run<T extends Resource, U extends HasConnection, V extends AnyOpts>(
-		ctor: RemoteResource<T, U>,
+		ctor: RemoteResource<T, U, V>,
 		name: string,
 		args: RunArgs<U>,
 		opts?: RunOpts<V>,
 	): T {
-		const withConnection = Object.create({ ...args, connection: this.connection });
-		return new ctor(name, withConnection, opts);
+		const withConnection: U = { ...args, connection: this.connection } as U;
+		return new ctor(name, withConnection, opts as V);
 	}
 }

@@ -47,7 +47,10 @@ export const Versions = z.object({
 	cniPlugins: z.string(),
 	containerd: z.string(),
 	crictl: z.string(),
+	etcd: z.string(),
 	k8s: z.string(),
+	krel: z.string(),
+	kubeVip: z.string(),
 	runc: z.string(),
 });
 

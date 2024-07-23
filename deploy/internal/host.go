@@ -40,6 +40,7 @@ func NewHost(ctx context.Context, name string, opts *HostOpts) (Host, error) {
 func (h *HostOpts) Down(ctx context.Context) error {
 	h.Logger.Debug("Destroying stack")
 	_, err := h.stack.Destroy(ctx,
+		colors.Destroy,
 		optdestroy.ProgressStreams(os.Stdout),
 	)
 	if err != nil {
@@ -53,6 +54,7 @@ func (h *HostOpts) Down(ctx context.Context) error {
 func (h *HostOpts) Preview(ctx context.Context) error {
 	h.Logger.Debug("Previewing stack")
 	_, err := h.stack.Preview(ctx,
+		colors.Preview,
 		optpreview.ProgressStreams(os.Stdout),
 	)
 	if err != nil {
@@ -66,6 +68,7 @@ func (h *HostOpts) Preview(ctx context.Context) error {
 func (h *HostOpts) Up(ctx context.Context) error {
 	h.Logger.Debug("Updating stack")
 	_, err := h.stack.Up(ctx,
+		colors.Up,
 		optup.ProgressStreams(os.Stdout),
 	)
 	if err != nil {

@@ -3,7 +3,7 @@ config:
   hosts:role: worker
   hosts:arch: amd64
   hosts:ip: 192.168.1.107
-  hosts:clusterIp: 10.69.2.10
+  hosts:clusterIp: 192.168.1.107
   hosts:installDisk: /dev/sda
   hosts:vlans:
     eth0.69:

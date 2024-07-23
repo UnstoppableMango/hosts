@@ -4,15 +4,18 @@ import {
 	CniPlugins,
 	Containerd,
 	Crictl,
+	Directory,
+	Etcd,
 	Ipv4PacketForwarding,
 	Kubeadm,
 	Kubectl,
 	Kubelet,
+	KubeVip,
 	Netplan,
+	Network,
 	Runc,
 	Runner,
 } from 'components';
-import { Network } from 'components/src/netplan';
 import * as config from './config';
 
 const name = config.hostname;
@@ -49,6 +52,16 @@ const netplan = runner.run(Netplan, name, {
 	priority: 69,
 }, { dependsOn: modprobe });
 
+const ipv4Forwarding = runner.run(Ipv4PacketForwarding, name, {});
+
+const k8sDir = runner.run(Directory, 'kubernetes-config', {
+	path: config.kubernetesDirectory,
+});
+
+const pkiDir = runner.run(Directory, 'pki', {
+	path: pulumi.interpolate`${k8sDir.path}/pki`,
+}, { dependsOn: k8sDir });
+
 const kubectl = runner.run(Kubectl, name, {
 	arch: config.arch,
 	version: config.versions.k8s,
@@ -57,50 +70,91 @@ const kubectl = runner.run(Kubectl, name, {
 const kubeadm = runner.run(Kubeadm, name, {
 	arch: config.arch,
 	version: config.versions.k8s,
+	clusterEndpoint: config.clusterEndpoint,
+	hostname: name,
+	hosts: config.hosts,
+	kubernetesDirectory: k8sDir.path,
+	certificatesDirectory: pkiDir.path,
+	caCertPem: config.theclusterCa.certPem,
+	caKeyPem: config.theclusterCa.privateKeyPem,
+}, { dependsOn: [netplan, pkiDir] });
+
+const crictl = runner.run(Crictl, name, {
+	arch: config.arch,
+	version: config.versions.crictl,
 });
 
-if (config.role === 'worker') {
-	runner.run(Ipv4PacketForwarding, name, {});
+const runc = runner.run(Runc, name, {
+	arch: config.arch,
+	version: config.versions.runc,
+});
 
+const containerd = runner.run(Containerd, name, {
+	arch: config.arch,
+	version: config.versions.containerd,
+	systemdDirectory: config.systemdDirectory,
+}, { dependsOn: runc });
+
+const imagePull = runner.run(remote.Command, 'pull-images', {
+	create: `kubeadm config images pull`,
+}, { dependsOn: [containerd, kubeadm] });
+
+const kubelet = runner.run(Kubelet, name, {
+	arch: config.arch,
+	version: config.versions.k8s,
+	kubernetesDirectory: k8sDir.path,
+	systemdDirectory: config.systemdDirectory,
+	bootstrapKubeconfig: '/etc/kubernetes/bootstrap-kubelet.conf',
+	kubeconfig: '/etc/kubernetes/kubelet.conf',
+	containerdSocket: containerd.socketPath,
+}, { dependsOn: [containerd, k8sDir] });
+
+if (config.role === 'controlplane') {
+	if (!config.vipInterface) {
+		throw new Error('ControlPlane requires a vipInterface');
+	}
+
+	const kubeVip = runner.run(KubeVip, name, {
+		clusterEndpoint: config.clusterEndpoint,
+		interface: config.vipInterface,
+		kubeconfigPath: pulumi.interpolate`${k8sDir.path}/admin.conf`, // I think kubeadm init creates this
+		version: config.versions.kubeVip,
+		manifestDir: kubelet.manifestDir,
+	}, { dependsOn: [k8sDir, kubelet] });
+
+	const etcd = runner.run(Etcd, name, {
+		arch: config.arch,
+		version: config.versions.etcd,
+		caCertPem: config.etcdCa.certPem,
+		caKeyPem: config.etcdCa.privateKeyPem,
+		manifestDir: kubelet.manifestDir,
+		certsDirectory: pkiDir.path,
+		kubeadmcfgPath: kubeadm.configurationPath,
+	}, { dependsOn: [containerd, kubelet, kubeadm] });
+
+	if (config.hostname === config.bootstrapNode) {
+		const init = runner.run(remote.Command, 'kubeadm-init', {
+			create: pulumi.all([
+				pulumi.interpolate`kubeadm init`,
+				pulumi.interpolate`--config ${kubeadm.configurationPath}`,
+			]).apply(x => x.join(' ')),
+		}, {
+			dependsOn: [
+				ipv4Forwarding,
+				kubeadm,
+				imagePull,
+				etcd,
+				kubeVip,
+				kubelet,
+				kubectl,
+			],
+		});
+	}
+}
+
+if (config.role === 'worker') {
 	runner.run(CniPlugins, name, {
 		arch: config.arch,
 		version: config.versions.cniPlugins,
 	});
-
-	runner.run(Containerd, name, {
-		arch: config.arch,
-		version: config.versions.containerd,
-	});
-
-	runner.run(Crictl, name, {
-		arch: config.arch,
-		version: config.versions.crictl,
-	});
-
-	runner.run(Kubelet, name, {
-		arch: config.arch,
-		version: config.versions.k8s,
-	});
-
-	runner.run(Runc, name, {
-		arch: config.arch,
-		version: config.versions.runc,
-	});
 }
-
-// // TODO: Not all of these are needed on both localhost and clusterIp
-// // https://kubernetes.io/docs/reference/networking/ports-and-protocols/#control-plane
-// ['127.0.0.1', this.config.clusterIp].map(ip => {
-// 	this.allowPort(ip, 6443); // Kubernetes API server
-// 	this.allowPort(ip, 2379); // etcd server client API
-// 	this.allowPort(ip, 2380); // etcd server client API
-// 	this.allowPort(ip, 10250); // Kubelet API
-// 	this.allowPort(ip, 10259); // kube-scheduler
-// 	this.allowPort(ip, 10257); // kube-controller-manager
-// });
-
-// // https://kubernetes.io/docs/reference/networking/ports-and-protocols/#node
-// ['127.0.0.1', this.config.clusterIp].map(ip => {
-// 	this.allowPort(ip, 10250); // Kubelet API
-// 	this.allowPort(ip, 10256); // kube-proxy
-// });
