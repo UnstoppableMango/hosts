@@ -8,11 +8,17 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/pulumi/pulumi/pkg/v3/backend/display"
+	"github.com/pulumi/pulumi/pkg/v3/engine"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/events"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/apitype"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/diag/colors"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/tokens"
 )
 
 type Workspace interface {
+	Display(apitype.UpdateKind)
 	GetHost(context.Context, string) (Host, error)
 }
 
@@ -75,4 +81,36 @@ func NewWorkspace(ctx context.Context, opts *WorkspaceOptions) (Workspace, error
 func (w *WorkspaceOptions) GetHost(ctx context.Context, name string) (Host, error) {
 	w.Logger.Debug("Creating host")
 	return NewHost(ctx, name, &HostOpts{WorkspaceOptions: *w})
+}
+
+func (w *WorkspaceOptions) Display(action apitype.UpdateKind) {
+	done := make(chan bool)
+	events := make(chan engine.Event)
+
+	var packageName tokens.PackageName = "hosts"
+	stackName := tokens.MustParseStackName("hosts")
+
+	go func() {
+		for e := range w.eventStream {
+			event, err := display.ConvertJSONEvent(e.EngineEvent)
+			if err != nil {
+				w.Logger.Error("error converting event", "err", err)
+				continue
+			}
+
+			events <- event
+		}
+	}()
+
+	display.ShowEvents("previewing", action,
+		stackName, packageName, "",
+		events, done,
+		display.Options{
+			Color:             colors.Always,
+			ShowConfig:        false,
+			ShowSameResources: false,
+		},
+		true)
+
+	<-done
 }

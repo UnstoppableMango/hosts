@@ -16,11 +16,11 @@ type ColorOpts struct {
 	Destroy optdestroy.Option
 }
 
-var colors = &ColorOpts{
-	Preview: &previewColor{},
-	Up:      &upColor{},
-	Destroy: &destroyColor{},
-}
+// var colors = &ColorOpts{
+// 	Preview: &previewColor{},
+// 	Up:      &upColor{},
+// 	Destroy: &destroyColor{},
+// }
 
 func (previewColor) ApplyOption(opts *optpreview.Options) {
 	opts.Color = "always"
