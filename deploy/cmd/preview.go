@@ -28,13 +28,32 @@ var previewCmd = &cobra.Command{
 			return err
 		}
 
-		log.Debug("Creating host")
-		host, err := workspace.GetHost(ctx, "pik8s4")
-		if err != nil {
-			return err
+		for _, name := range controlplanes {
+			log.Debug("Creating host")
+			host, err := workspace.GetHost(ctx, name)
+			if err != nil {
+				return err
+			}
+
+			log.Info("Previewing host")
+			if err = host.Preview(ctx); err != nil {
+				return err
+			}
 		}
 
-		log.Info("Previewing host")
-		return host.Preview(ctx)
+		for _, name := range workers {
+			log.Debug("Creating host")
+			host, err := workspace.GetHost(ctx, name)
+			if err != nil {
+				return err
+			}
+
+			log.Info("Previewing host")
+			if err = host.Preview(ctx); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	},
 }

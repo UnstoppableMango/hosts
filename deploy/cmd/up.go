@@ -28,13 +28,32 @@ var upCmd = &cobra.Command{
 			return err
 		}
 
-		log.Debug("Creating host")
-		host, err := workspace.GetHost(ctx, "pik8s4")
-		if err != nil {
-			return err
+		for _, name := range controlplanes {
+			log.Debug("Creating host")
+			host, err := workspace.GetHost(ctx, name)
+			if err != nil {
+				return err
+			}
+
+			log.Info("Updating host")
+			if err = host.Up(ctx); err != nil {
+				return err
+			}
 		}
 
-		log.Info("Updating host")
-		return host.Up(ctx)
+		for _, name := range workers {
+			log.Debug("Creating host")
+			host, err := workspace.GetHost(ctx, name)
+			if err != nil {
+				return err
+			}
+
+			log.Info("Updating host")
+			if err = host.Up(ctx); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	},
 }
