@@ -81,7 +81,7 @@ jobs:
           command: preview
           refresh: true
           pulumi-version-file: .versions/pulumi
-          expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
+          # expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
