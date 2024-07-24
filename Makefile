@@ -18,7 +18,7 @@ HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
 preview: components $(DEPLOY)
 	$(DEPLOY) preview
 deploy: components $(DEPLOY)
-	$(DEPLOY)
+	$(DEPLOY) up
 
 $(HOSTS): components
 	@$(MAKE) -C ${PROGRAM_DIR} --no-print-directory $@

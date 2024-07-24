@@ -69,7 +69,7 @@ export class Kubelet extends CommandComponent {
 					mode: 'AlwaysAllow',
 				},
 			}),
-		});
+		}, { dependsOn: [ configDir ]});
 
 		const systemdService = this.tee('systemd-service', {
 			path: interpolate`${systemdDirectory}/${serviceName}.service`,
@@ -100,7 +100,7 @@ export class Kubelet extends CommandComponent {
 			}),
 		});
 
-		const start = this.cmd('start', {
+		const enable = this.cmd('start', {
 			create: interpolate`systemctl daemon-reload && systemctl enable ${serviceName}`,
 			delete: interpolate`systemctl disable --now ${serviceName}`,
 			triggers: [systemdService.stdin],
@@ -123,7 +123,7 @@ export class Kubelet extends CommandComponent {
 			manifestsMkdir,
 			config,
 			systemdService,
-			start,
+			enable,
 		});
 	}
 }
