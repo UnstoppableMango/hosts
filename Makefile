@@ -19,6 +19,8 @@ preview: components $(DEPLOY)
 	$(DEPLOY) preview
 deploy: components $(DEPLOY)
 	$(DEPLOY) up
+down: components $(DEPLOY)
+	$(DEPLOY) down
 
 $(HOSTS): components
 	@$(MAKE) -C ${PROGRAM_DIR} --no-print-directory $@
