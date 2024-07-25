@@ -69,7 +69,7 @@ export class Kubelet extends CommandComponent {
 					mode: 'AlwaysAllow',
 				},
 			}),
-		}, { dependsOn: [ configDir ]});
+		}, { dependsOn: [configDir] });
 
 		const systemdService = this.tee('systemd-service', {
 			path: interpolate`${systemdDirectory}/${serviceName}.service`,
