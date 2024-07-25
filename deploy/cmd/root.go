@@ -14,7 +14,19 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "deploy",
+	Use:       "deploy",
+	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	ValidArgs: []string{"down", "preview", "up"},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
+		opt := hosts.Op(args[0])
+
+		return hosts.Deploy(ctx, opt, &hosts.DeployOpts{
+			ControlPlanes: controlplanes,
+			Workers:       workers,
+			Logger:        log,
+		})
+	},
 }
 
 func Execute() {
