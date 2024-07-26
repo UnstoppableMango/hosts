@@ -7,6 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/pulumi/pulumi/sdk/v3 v3.129.0
 	github.com/spf13/cobra v1.8.1
+	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8
 	golang.org/x/sync v0.8.0
 )
 
@@ -77,7 +78,6 @@ require (
 	github.com/zclconf/go-cty v1.13.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
-	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
