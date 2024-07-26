@@ -136,13 +136,15 @@ if (config.role === 'controlplane') {
 		create: pulumi.all([
 			pulumi.interpolate`kubeadm init`,
 			pulumi.interpolate`--config ${kubeadm.configurationPath}`,
-			pulumi.interpolate`--ignore-preflight-errors ${[
-				'Port-2379',
-				'Port-2380',
-				'Port-10250',
-				'Port-10259',
-				'Port-10260'
-			].join(',')}`
+			pulumi.interpolate`--ignore-preflight-errors ${
+				[
+					'Port-2379',
+					'Port-2380',
+					'Port-10250',
+					'Port-10259',
+					'Port-10260',
+				].join(',')
+			}`,
 		]).apply(x => x.join(' ')),
 	}, {
 		dependsOn: [
