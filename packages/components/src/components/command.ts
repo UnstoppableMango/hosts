@@ -6,7 +6,6 @@ import {
 	CustomResourceOptions,
 	Input,
 	interpolate,
-	log,
 	Output,
 	output,
 	Resource,
@@ -26,7 +25,7 @@ export interface CommandComponentArgs {
 }
 
 export abstract class CommandComponent extends ComponentResource {
-	private readonly connection: Output<inputs.ConnectionArgs>;
+	protected readonly connection: Output<inputs.ConnectionArgs>;
 
 	constructor(type: string, name: string, args: CommandComponentArgs, opts?: ComponentResourceOptions) {
 		super(type, name, args, opts);
