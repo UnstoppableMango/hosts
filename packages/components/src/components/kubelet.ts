@@ -8,7 +8,6 @@ import { Directory } from './directory';
 
 export interface KubeletArgs extends CommandComponentArgs {
 	arch: Architecture;
-	bootstrapKubeconfig: Input<string>;
 	containerdSocket: Input<string>;
 	kubeconfig: Input<string>;
 	kubernetesDirectory: Input<string>;
@@ -23,8 +22,6 @@ export class Kubelet extends CommandComponent {
 		super('hosts:index:Kubelet', name, args, opts);
 		if (opts?.urn) return;
 
-		const bootstrapKubeconfig = output(args.bootstrapKubeconfig);
-		const kubeconfig = output(args.kubeconfig);
 		const k8sDir = output(args.kubernetesDirectory);
 		const serviceName = output('kubelet');
 		const systemdDirectory = output(args.systemdDirectory);
@@ -45,8 +42,6 @@ export class Kubelet extends CommandComponent {
 			path: '/var/lib/kubelet',
 		});
 
-		// I think kubeadm puts the kubeconfig here
-		// const configPath = interpolate`${k8sDir}/kubelet.conf`;
 		const configPath = interpolate`${configDir.path}/kubelet.conf`;
 		const config = this.tee('config-tee', {
 			path: configPath,

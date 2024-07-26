@@ -55,32 +55,7 @@ export class Etcd extends CommandComponent {
 			additionalSecretOutputs: ['stdout'],
 		});
 
-		// const certs = this.initAllCerts(kubeadmcfgPath, {
-		// 	dependsOn: [certTee, keyTee],
-		// });
-
-		// const removeCerts = this.cmd('clean-up-certs', {
-		// 	delete: all([pkiPath, etcdPkiPath]).apply(([p, e]) =>
-		// 		[
-		// 			'rm -f',
-		// 			`${p}/apiserver-etcd-client.crt`,
-		// 			`${p}/apiserver-etcd-client.key`,
-		// 			`${e}/healthcheck-client.crt`,
-		// 			`${e}/healthcheck-client.key`,
-		// 			`${e}/peer.crt`,
-		// 			`${e}/peer.key`,
-		// 			`${e}/server.crt`,
-		// 			`${e}/server.key`,
-		// 		].join(' ')
-		// 	),
-		// }, { dependsOn: certs });
-
-		// const local = this.cmd('etcd-local', {
-		// 	create: kubeadmcfgPath.apply(Etcd.initPhaseLocal),
-		// 	delete: interpolate`rm -f ${manifestDir}/etcd.yaml`,
-		// }, { dependsOn: certs, deleteBeforeReplace: true });
-
-		const varLib = this.exec(Directory, 'var-lib-etcd', {
+		const varLib = this.exec(Directory, 'var-lib', {
 			path: '/var/lib/etcd',
 		});
 

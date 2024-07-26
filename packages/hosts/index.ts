@@ -104,7 +104,6 @@ const kubelet = runner.run(Kubelet, name, {
 	version: config.versions.k8s,
 	kubernetesDirectory: k8sDir.path,
 	systemdDirectory: config.systemdDirectory,
-	bootstrapKubeconfig: '/etc/kubernetes/bootstrap-kubelet.conf',
 	kubeconfig: '/etc/kubernetes/kubelet.conf',
 	containerdSocket: containerd.socketPath,
 }, { dependsOn: [containerd, k8sDir] });
@@ -124,17 +123,16 @@ if (config.role === 'controlplane') {
 		kubeadmcfgPath: kubeadm.configurationPath,
 	}, { dependsOn: [containerd, kubelet, kubeadm] });
 
-	const etcdCa = etcd.initCert(kubeadm, 'ca', { dependsOn: kubeadm });
 	const etcdCerts = [
-		etcd.initCert(kubeadm, 'server', { dependsOn: etcdCa }),
-		etcd.initCert(kubeadm, 'peer', { dependsOn: etcdCa }),
-		etcd.initCert(kubeadm, 'healthcheck-client', { dependsOn: etcdCa }),
+		etcd.initCert(kubeadm, 'server', { dependsOn: [kubeadm, etcd] }),
+		etcd.initCert(kubeadm, 'peer', { dependsOn: [kubeadm, etcd] }),
+		etcd.initCert(kubeadm, 'healthcheck-client', { dependsOn: [kubeadm, etcd] }),
 	];
 
 	const apiServerCerts = [
 		kubeadm.initCert('apiserver', undefined, { dependsOn: kubeadm }),
 		kubeadm.initCert('apiserver-kubelet-client', undefined, { dependsOn: kubeadm }),
-		kubeadm.initCert('apiserver-etcd-client', undefined, { dependsOn: [kubeadm, etcdCa] }),
+		kubeadm.initCert('apiserver-etcd-client', undefined, { dependsOn: [kubeadm, etcd] }),
 	];
 
 	const frontProxyCa = kubeadm.initCert('front-proxy-ca', undefined, { dependsOn: kubeadm });
@@ -142,7 +140,6 @@ if (config.role === 'controlplane') {
 	const saCert = kubeadm.saCert({ dependsOn: kubeadm });
 
 	const certsPhase = [
-		etcdCa,
 		...etcdCerts,
 		...apiServerCerts,
 		frontProxyCa,
@@ -174,7 +171,7 @@ if (config.role === 'controlplane') {
 		kubeadm.initControlPlane('scheduler', { dependsOn: etcdLocal }),
 	];
 
-	const startKubelet = kubeadm.phase('kubelet-start', {}, { dependsOn: controlplanePhase });
+	const startKubelet = kubeadm.phase('kubelet-start', {}, { dependsOn: [...controlplanePhase, kubeVip] });
 
 	const uploadConfig = [
 		kubeadm.phase('upload-config kubeadm', {}, { dependsOn: startKubelet }),

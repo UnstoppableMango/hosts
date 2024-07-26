@@ -2,6 +2,7 @@ import { remote } from '@pulumi/command';
 import { asset, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { Architecture, ContainerdInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import { CommandComponent, CommandComponentArgs } from './command';
+import { Directory } from './directory';
 
 export interface ContainerdArgs extends CommandComponentArgs {
 	arch: Architecture;
@@ -34,10 +35,18 @@ export class Containerd extends CommandComponent {
 			source: new asset.FileAsset('./containerd/config.toml'),
 		}, { dependsOn: mkdir });
 
+		const varLib = this.exec(Directory, 'var-lib', {
+			path: '/var/lib/containerd',
+		});
+
+		const removeSystemd = this.cmd('remove-systemd', {
+			delete: interpolate`rm -f ${systemdDirectory}/containerd.service`,
+		});
+
 		const systemdService = this.exec(remote.CopyToRemote, 'systemd-service', {
 			remotePath: interpolate`${systemdDirectory}/containerd.service`,
 			source: new asset.FileAsset('./containerd/containerd.service'),
-		});
+		}, { dependsOn: removeSystemd });
 
 		const start = this.cmd('start-service', {
 			create: interpolate`systemctl daemon-reload && systemctl enable --now ${serviceName}`,
@@ -48,6 +57,7 @@ export class Containerd extends CommandComponent {
 				install,
 				config,
 				systemdService,
+				varLib,
 			],
 		});
 
