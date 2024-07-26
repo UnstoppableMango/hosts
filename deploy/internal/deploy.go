@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -34,17 +35,31 @@ func Deploy(ctx context.Context, op Op, opts *DeployOpts) error {
 		return err
 	}
 
-	err = runner.deployHosts(ctx, opts.ControlPlanes)
-	if err != nil {
+	if err = runner.deployHosts(ctx, opts.ControlPlanes); err != nil {
 		return err
 	}
 
 	return runner.deployHosts(ctx, opts.Workers)
 }
 
-func (o *operation) deployHosts(ctx context.Context, hosts []string) error {
+func (o *operation) deployHosts(ctx context.Context, names []string) error {
+	hosts, err := o.getHosts(ctx, names)
+	if err != nil {
+		return err
+	}
+
+	if err = o.runHosts(ctx, maps.Values(hosts)); err != nil {
+		return o.cancelHosts(ctx, maps.Values(hosts))
+	}
+
+	return nil
+}
+
+func (o *operation) getHosts(ctx context.Context, names []string) (map[string]Host, error) {
 	errs, ctx := errgroup.WithContext(ctx)
-	for _, name := range hosts {
+	res := map[string]Host{}
+
+	for _, name := range names {
 		errs.Go(func() error {
 			o.log.Debug("Creating host")
 			host, err := o.work.GetHost(ctx, name)
@@ -52,6 +67,19 @@ func (o *operation) deployHosts(ctx context.Context, hosts []string) error {
 				return err
 			}
 
+			res[name] = host
+			return nil
+		})
+	}
+
+	return res, errs.Wait()
+}
+
+func (o *operation) runHosts(ctx context.Context, hosts []Host) error {
+	errs, ctx := errgroup.WithContext(ctx)
+
+	for _, host := range hosts {
+		errs.Go(func() error {
 			switch o.op {
 			case Down:
 				return host.Down(ctx)
@@ -62,6 +90,18 @@ func (o *operation) deployHosts(ctx context.Context, hosts []string) error {
 			}
 
 			return fmt.Errorf("unsupported op: %s", o.op)
+		})
+	}
+
+	return errs.Wait()
+}
+
+func (o *operation) cancelHosts(ctx context.Context, hosts []Host) error {
+	errs, ctx := errgroup.WithContext(ctx)
+
+	for _, host := range hosts {
+		errs.Go(func() error {
+			return host.Cancel(ctx)
 		})
 	}
 

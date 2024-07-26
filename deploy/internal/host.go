@@ -14,6 +14,7 @@ type Host interface {
 	Down(context.Context) error
 	Preview(context.Context) error
 	Up(context.Context) error
+	Cancel(context.Context) error
 }
 
 type HostOpts struct {
@@ -76,4 +77,8 @@ func (h *HostOpts) Up(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (h *HostOpts) Cancel(ctx context.Context) error {
+	return h.stack.Cancel(ctx)
 }
