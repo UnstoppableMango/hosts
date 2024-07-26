@@ -103,7 +103,7 @@ export class Kubeadm extends CommandComponent {
 	public phase(phase: string, args: PhaseArgs, opts?: CustomResourceOptions): remote.Command {
 		return new remote.Command(`kubeadm-${phase.replace(' ', '-')}`, {
 			connection: this.connection,
-			create: interpolate`kubeadm init ${phase} --config ${this.configurationPath}`,
+			create: interpolate`kubeadm init phase ${phase} --config ${this.configurationPath}`,
 			update: args.update,
 			delete: args.delete,
 			triggers: args.triggers,
@@ -122,6 +122,14 @@ export class Kubeadm extends CommandComponent {
 
 	public initControlPlane(component: string, opts?: CustomResourceOptions): remote.Command {
 		return this.phase(`control-plane ${component}`, {}, opts);
+	}
+
+	public saCert(opts?: CustomResourceOptions): remote.Command {
+		return new remote.Command('kubeadm-certs-sa', {
+			connection: this.connection,
+			create: interpolate`kubeadm init phase certs sa --cert-dir ${this.certificatesDirectory}`,
+			delete: interpolate`rm -f ${this.certificatesDirectory}/sa.{crt,key}`,
+		}, opts);
 	}
 }
 

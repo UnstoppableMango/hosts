@@ -114,14 +114,6 @@ if (config.role === 'controlplane') {
 		throw new Error('ControlPlane requires a vipInterface');
 	}
 
-	const kubeVip = runner.run(KubeVip, name, {
-		clusterEndpoint: config.clusterEndpoint,
-		interface: config.vipInterface,
-		kubeconfigPath: pulumi.interpolate`${k8sDir.path}/admin.conf`, // I think kubeadm init creates this
-		version: config.versions.kubeVip,
-		manifestDir: kubelet.manifestDir,
-	}, { dependsOn: [k8sDir, kubelet] });
-
 	const etcd = runner.run(Etcd, name, {
 		arch: config.arch,
 		version: config.versions.etcd,
@@ -147,7 +139,7 @@ if (config.role === 'controlplane') {
 
 	const frontProxyCa = kubeadm.initCert('front-proxy-ca', undefined, { dependsOn: kubeadm });
 	const frontProxyClient = kubeadm.initCert('front-proxy-client', undefined, { dependsOn: [kubeadm, frontProxyCa] });
-	const saCert = kubeadm.initCert('sa', undefined, { dependsOn: kubeadm });
+	const saCert = kubeadm.saCert({ dependsOn: kubeadm });
 
 	const certsPhase = [
 		etcdCa,
@@ -166,22 +158,30 @@ if (config.role === 'controlplane') {
 		kubeadm.initKubeconfig('scheduler', { dependsOn: certsPhase }),
 	];
 
-	const etcdLocal = etcd.initLocal(kubeadm, { dependsOn: etcdCerts });
+	const kubeVip = runner.run(KubeVip, name, {
+		clusterEndpoint: config.clusterEndpoint,
+		interface: config.vipInterface,
+		kubeconfigPath: pulumi.interpolate`${k8sDir.path}/admin.conf`,
+		version: config.versions.kubeVip,
+		manifestDir: kubelet.manifestDir,
+	}, { dependsOn: [k8sDir, ...kubeconfigs] });
+
+	const etcdLocal = etcd.initLocal(kubeadm, { dependsOn: kubeconfigs });
 
 	const controlplanePhase = [
-		kubeadm.initControlPlane('apiserver', { dependsOn: certsPhase }),
-		kubeadm.initControlPlane('controller-manager', { dependsOn: certsPhase }),
-		kubeadm.initControlPlane('scheduler', { dependsOn: certsPhase }),
+		kubeadm.initControlPlane('apiserver', { dependsOn: etcdLocal }),
+		kubeadm.initControlPlane('controller-manager', { dependsOn: etcdLocal }),
+		kubeadm.initControlPlane('scheduler', { dependsOn: etcdLocal }),
 	];
 
-	const startKubelet = kubeadm.phase('start-kubelet', {}, { dependsOn: controlplanePhase });
+	const startKubelet = kubeadm.phase('kubelet-start', {}, { dependsOn: controlplanePhase });
 
 	const uploadConfig = [
-		kubeadm.phase('upload-config kubeadm', {}, { dependsOn: controlplanePhase }),
-		kubeadm.phase('upload-config kubelet', {}, { dependsOn: controlplanePhase }),
+		kubeadm.phase('upload-config kubeadm', {}, { dependsOn: startKubelet }),
+		kubeadm.phase('upload-config kubelet', {}, { dependsOn: startKubelet }),
 	];
 
-	const uploadCerts = kubeadm.phase('upload-certs', {}, { dependsOn: controlplanePhase });
+	const uploadCerts = kubeadm.phase('upload-certs', {}, { dependsOn: uploadConfig });
 	const markControlPlane = kubeadm.phase('mark-control-plane', {}, { dependsOn: uploadCerts });
 	const bootstrapToken = kubeadm.phase('bootstrap-token', {}, { dependsOn: markControlPlane });
 	const kubeletFinalize = kubeadm.phase('kubelet-finalize experimental-cert-rotation', {}, { dependsOn: bootstrapToken });
@@ -191,7 +191,7 @@ if (config.role === 'controlplane') {
 		kubeadm.phase('addon kube-proxy', {}, { dependsOn: kubeletFinalize }),
 	];
 
-	const showJoinCommand = kubeadm.phase('show-join-command', {}, { dependsOn: markControlPlane });
+	const showJoinCommand = kubeadm.phase('show-join-command', {}, { dependsOn: addons });
 }
 
 if (config.role === 'worker') {
