@@ -17,7 +17,6 @@ import { Directory } from './directory';
 
 export interface KubeletArgs {
 	arch: Architecture;
-	bootstrapKubeconfig: Input<string>;
 	containerdSocket: Input<string>;
 	kubeconfig: Input<string>;
 	kubernetesDirectory: Input<string>;
@@ -32,8 +31,6 @@ export class Kubelet extends ComponentResource {
 		super('hosts:index:Kubelet', name, args, opts);
 		if (opts?.urn) return;
 
-		const bootstrapKubeconfig = output(args.bootstrapKubeconfig);
-		const kubeconfig = output(args.kubeconfig);
 		const k8sDir = output(args.kubernetesDirectory);
 		const serviceName = output('kubelet');
 		const systemdDirectory = output(args.systemdDirectory);
