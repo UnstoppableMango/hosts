@@ -18,7 +18,13 @@ interface HostInfo {
 	ip: string;
 }
 
-export interface KubeadmArgs {
+export interface PhaseArgs {
+	delete?: Input<string>;
+	update?: Input<string>;
+	triggers?: Inputs[];
+}
+
+export interface KubeadmArgs extends CommandComponentArgs {
 	arch: Architecture;
 	certificatesDirectory: Input<string>;
 	caCertPem: Input<string>;
@@ -31,6 +37,7 @@ export interface KubeadmArgs {
 }
 
 export class Kubeadm extends ComponentResource {
+	public readonly certificatesDirectory!: Output<string>;
 	public readonly configurationPath!: Output<string>;
 	public readonly path!: Output<string>;
 
@@ -105,15 +112,41 @@ export class Kubeadm extends ComponentResource {
 			},
 		}, { parent: this, dependsOn: install });
 
+		this.certificatesDirectory = certificatesDirectory;
 		this.configurationPath = configPath;
 		this.path = install.path;
 
 		this.registerOutputs({
+			certificatesDirectory,
 			configurationPath: this.configurationPath,
 			install,
 			chmod,
 			path: this.path,
 		});
+	}
+
+	public phase(phase: string, args: PhaseArgs, opts?: CustomResourceOptions): remote.Command {
+		return new remote.Command(`kubeadm-${phase.replace(' ', '-')}`, {
+			connection: this.connection,
+			create: interpolate`kubeadm init ${phase} --config ${this.configurationPath}`,
+			update: args.update,
+			delete: args.delete,
+			triggers: args.triggers,
+		}, opts);
+	}
+
+	public initCert(cert: string, name?: Input<string>, opts?: CustomResourceOptions): remote.Command {
+		return this.phase(`certs ${cert}`, {
+			delete: interpolate`rm -f ${this.certificatesDirectory}/${name ?? cert}.{crt,key}`
+		}, opts);
+	}
+
+	public initKubeconfig(role: string, opts?: CustomResourceOptions): remote.Command {
+		return this.phase(`kubeconfig ${role}`, {}, opts);
+	}
+
+	public initControlPlane(component: string, opts?: CustomResourceOptions): remote.Command {
+		return this.phase(`control-plane ${component}`, {}, opts);
 	}
 }
 

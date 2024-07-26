@@ -1,9 +1,15 @@
-import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { Mkdir } from '@unmango/baremetal/coreutils';
-import { Architecture, EtcdInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
+import { ComponentResourceOptions, CustomResourceOptions, Input, interpolate, Output, output, Resource } from '@pulumi/pulumi';
 import { Directory } from './directory';
+import { Kubeadm } from './kubeadm';
+import { z } from 'zod';
+import { remote } from '@pulumi/command';
 
-export interface EtcdArgs {
+
+const EtcdCerts = z.object({
+
+});
+
+export interface EtcdArgs extends CommandComponentArgs {
 	arch: Architecture;
 	caCertPem: Input<string>;
 	caKeyPem: Input<string>;
@@ -15,6 +21,8 @@ export interface EtcdArgs {
 
 export class Etcd extends ComponentResource {
 	public readonly directory!: Output<string>;
+	public readonly rootPkiPath!: Output<string>;
+	public readonly pkiPath!: Output<string>;
 
 	constructor(name: string, args: EtcdArgs, opts?: ComponentResourceOptions) {
 		super('hosts:index:Etcd', name, args, opts);
@@ -82,34 +90,21 @@ export class Etcd extends ComponentResource {
 		// });
 
 		// this.directory = install.directory;
+		this.rootPkiPath = output(args.certsDirectory);
+		this.pkiPath = etcdPkiPath
 
 		this.registerOutputs({
 			directory: this.directory,
+			rootPkiPath: this.rootPkiPath,
+			pkiPath: this.pkiPath,
 		});
 	}
 
-	// private initAllCerts(
-	// 	configPath: Input<string>,
-	// 	opts?: CustomResourceOptions,
-	// ): Resource[] {
-	// 	return [
-	// 		'etcd-server',
-	// 		'etcd-peer',
-	// 		'etcd-healthcheck-client',
-	// 		'apiserver-etcd-client',
-	// 	].map(phase => {
-	// 		return this.cmd(`${phase}-certs`, {
-	// 			create: output(configPath).apply(x => Etcd.initPhaseCerts(phase, x)),
-	// 			delete: '',
-	// 		}, opts);
-	// 	});
-	// }
+	public initCert(kubeadm: Kubeadm, cert: string, opts?: CustomResourceOptions): remote.Command {
+		return kubeadm.initCert(`etcd-${cert}`, `etcd/${cert}`, opts);
+	}
 
-	// private static initPhaseCerts(phase: string, config: string): string {
-	// 	return `kubeadm init phase certs ${phase} --config=${config}`;
-	// }
-
-	// private static initPhaseLocal(config: string): string {
-	// 	return `kubeadm init phase etcd local --config=${config}`;
-	// }
+	public initLocal(kubeadm: Kubeadm, opts?: CustomResourceOptions): remote.Command {
+		return kubeadm.phase('etcd local', {}, opts);
+	}
 }

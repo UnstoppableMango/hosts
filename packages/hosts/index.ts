@@ -133,15 +133,67 @@ const kubelet = new Kubelet(name, {
 // 		manifestDir: kubelet.manifestDir,
 // 	}, { dependsOn: [k8sDir, kubelet] });
 
-// 	const etcd = runner.run(Etcd, name, {
-// 		arch: config.arch,
-// 		version: config.versions.etcd,
-// 		caCertPem: config.etcdCa.certPem,
-// 		caKeyPem: config.etcdCa.privateKeyPem,
-// 		manifestDir: kubelet.manifestDir,
-// 		certsDirectory: pkiDir.path,
-// 		kubeadmcfgPath: kubeadm.configurationPath,
-// 	}, { dependsOn: [containerd, kubelet, kubeadm] });
+	const etcdCa = etcd.initCert(kubeadm, 'ca', { dependsOn: kubeadm });
+	const etcdCerts = [
+		etcd.initCert(kubeadm, 'server', { dependsOn: etcdCa }),
+		etcd.initCert(kubeadm, 'peer', { dependsOn: etcdCa }),
+		etcd.initCert(kubeadm, 'healthcheck-client', { dependsOn: etcdCa }),
+	];
+
+	const apiServerCerts = [
+		kubeadm.initCert('apiserver', undefined, { dependsOn: kubeadm }),
+		kubeadm.initCert('apiserver-kubelet-client', undefined, { dependsOn: kubeadm }),
+		kubeadm.initCert('apiserver-etcd-client', undefined, { dependsOn: [kubeadm, etcdCa] }),
+	];
+
+	const frontProxyCa = kubeadm.initCert('front-proxy-ca', undefined, { dependsOn: kubeadm });
+	const frontProxyClient = kubeadm.initCert('front-proxy-client', undefined, { dependsOn: [kubeadm, frontProxyCa] });
+	const saCert = kubeadm.initCert('sa', undefined, { dependsOn: kubeadm });
+
+	const certsPhase = [
+		etcdCa,
+		...etcdCerts,
+		...apiServerCerts,
+		frontProxyCa,
+		frontProxyClient,
+		saCert,
+	];
+
+	const kubeconfigs = [
+		kubeadm.initKubeconfig('admin', { dependsOn: certsPhase }),
+		kubeadm.initKubeconfig('super-admin', { dependsOn: certsPhase }),
+		kubeadm.initKubeconfig('kubelet', { dependsOn: certsPhase }),
+		kubeadm.initKubeconfig('controller-manager', { dependsOn: certsPhase }),
+		kubeadm.initKubeconfig('scheduler', { dependsOn: certsPhase }),
+	];
+
+	const etcdLocal = etcd.initLocal(kubeadm, { dependsOn: etcdCerts });
+
+	const controlplanePhase = [
+		kubeadm.initControlPlane('apiserver', { dependsOn: certsPhase }),
+		kubeadm.initControlPlane('controller-manager', { dependsOn: certsPhase }),
+		kubeadm.initControlPlane('scheduler', { dependsOn: certsPhase }),
+	];
+
+	const startKubelet = kubeadm.phase('start-kubelet', {}, { dependsOn: controlplanePhase });
+
+	const uploadConfig = [
+		kubeadm.phase('upload-config kubeadm', {}, { dependsOn: controlplanePhase }),
+		kubeadm.phase('upload-config kubelet', {}, { dependsOn: controlplanePhase }),
+	];
+
+	const uploadCerts = kubeadm.phase('upload-certs', {}, { dependsOn: controlplanePhase });
+	const markControlPlane = kubeadm.phase('mark-control-plane', {}, { dependsOn: uploadCerts });
+	const bootstrapToken = kubeadm.phase('bootstrap-token', {}, { dependsOn: markControlPlane });
+	const kubeletFinalize = kubeadm.phase('kubelet-finalize experimental-cert-rotation', {}, { dependsOn: bootstrapToken });
+
+	const addons = [
+		kubeadm.phase('addon coredns', {}, { dependsOn: kubeletFinalize }),
+		kubeadm.phase('addon kube-proxy', {}, { dependsOn: kubeletFinalize }),
+	];
+
+	const showJoinCommand = kubeadm.phase('show-join-command', {}, { dependsOn: markControlPlane });
+}
 
 // 	const init = runner.run(remote.Command, 'kubeadm-init', {
 // 		create: pulumi.all([
