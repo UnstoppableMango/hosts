@@ -1,15 +1,16 @@
-import { remote } from '@pulumi/command';
-import { asset, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { Architecture, ContainerdInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { CommandComponent, CommandComponentArgs } from './command';
+import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
+import { ArchiveInstall } from './archiveInstall';
+import { Mkdir, Tee } from '@unmango/baremetal/coreutils';
+import * as fs from 'node:fs/promises';
 
-export interface ContainerdArgs extends CommandComponentArgs {
+export interface ContainerdArgs {
 	arch: Architecture;
 	systemdDirectory: Input<string>;
 	version: Input<string>;
 }
 
-export class Containerd extends CommandComponent {
+export class Containerd extends ComponentResource {
 	public readonly socketPath!: Output<string>;
 	public readonly configDirectory!: Output<string>;
 
@@ -17,39 +18,63 @@ export class Containerd extends CommandComponent {
 		super('hosts:index:Containerd', name, args, opts);
 		if (opts?.urn) return;
 
+		const architecture = output(args.arch);
+		const version = output(args.version);
 		const configDirectory = output('/etc/containerd');
 		const serviceName = output('containerd');
-		const socketPath = output('unix:///run/containerd/containerd.sock');
 		const systemdDirectory = output(args.systemdDirectory);
-		const version = output(args.version);
+		const socketPath = output('unix:///run/containerd/containerd.sock');
+		const directory = output('/usr/local/bin');
+		const archiveName = interpolate`containerd-${version}-linux-${architecture}.tar.gz`;
+		const url = interpolate`https://github.com/containerd/containerd/releases/download/v${version}/${archiveName}`;
 
-		const install = this.exec(ContainerdInstall, name, {
-			architecture: args.arch,
-			version,
-		});
-
-		const mkdir = this.mkdir('config-mkdir', configDirectory);
-		const config = this.exec(remote.CopyToRemote, 'config', {
-			remotePath: interpolate`${configDirectory}/config.toml`,
-			source: new asset.FileAsset('./containerd/config.toml'),
-		}, { dependsOn: mkdir });
-
-		const systemdService = this.exec(remote.CopyToRemote, 'systemd-service', {
-			remotePath: interpolate`${systemdDirectory}/containerd.service`,
-			source: new asset.FileAsset('./containerd/containerd.service'),
-		});
-
-		const start = this.cmd('start-service', {
-			create: interpolate`systemctl daemon-reload && systemctl enable --now ${serviceName}`,
-			delete: interpolate`systemctl disable --now ${serviceName}`,
-			triggers: [systemdService.source],
-		}, {
-			dependsOn: [
-				install,
-				config,
-				systemdService,
+		const install = new ArchiveInstall(name, {
+			archiveName,
+			url,
+			directory,
+			stripComponents: 1,
+			files: [
+				'containerd',
+				'containerd-shim',
+				'containerd-shim-runc-v1',
+				'containerd-shim-runc-v2',
+				'containerd-stress',
+				'ctr',
 			],
-		});
+		}, { parent: this });
+
+		const mkdir = new Mkdir('config-mkdir', {
+			args: {
+				directory: [configDirectory],
+			},
+		}, { parent: this });
+
+		const config = new Tee('config', {
+			args: {
+				files: [interpolate`${configDirectory}/config.toml`],
+				stdin: output(fs.readFile('./containerd/config.toml', 'utf8')),
+			},
+		}, { parent: this, dependsOn: [mkdir] });
+
+		const systemdService = new Tee('systemd-service', {
+			args: {
+				files: [interpolate`${systemdDirectory}/containerd.service`],
+				stdin: output(fs.readFile('./containerd/containerd.service', 'utf8')),
+			},
+		}, { parent: this });
+
+		// TODO
+		// const start = this.cmd('start-service', {
+		// 	create: interpolate`systemctl daemon-reload && systemctl enable --now ${serviceName}`,
+		// 	delete: interpolate`systemctl disable --now ${serviceName}`,
+		// 	triggers: [systemdService.source],
+		// }, {
+		// 	dependsOn: [
+		// 		install,
+		// 		config,
+		// 		systemdService,
+		// 	],
+		// });
 
 		this.configDirectory = configDirectory;
 		this.socketPath = socketPath;

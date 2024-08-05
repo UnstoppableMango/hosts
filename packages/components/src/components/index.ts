@@ -1,3 +1,4 @@
+export * from './archiveInstall';
 export * from './cniPlugins';
 export * from './containerd';
 export * from './crictl';
@@ -9,4 +10,5 @@ export * from './kubectl';
 export * from './kubelet';
 export * from './kubeVip';
 export * from './netplan';
+export * from './provisioner';
 export * from './runc';

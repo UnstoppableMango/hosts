@@ -1,11 +1,12 @@
-import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { CommandComponent, CommandComponentArgs } from './command';
+import { ComponentResource, ComponentResourceOptions, Input, Output, output } from '@pulumi/pulumi';
+import { Mkdir } from '@unmango/baremetal/coreutils';
 
-export interface DirectoryArgs extends CommandComponentArgs {
+export interface DirectoryArgs {
 	path: Input<string>;
 }
 
-export class Directory extends CommandComponent {
+export class Directory extends ComponentResource {
+	public readonly op!: Mkdir;
 	public readonly path!: Output<string>;
 
 	constructor(name: string, args: DirectoryArgs, opts?: ComponentResourceOptions) {
@@ -14,15 +15,18 @@ export class Directory extends CommandComponent {
 
 		const path = output(args.path);
 
-		const mkdir = this.cmd(name, {
-			create: interpolate`mkdir -p ${path}`,
-			delete: interpolate`rm -rf ${path}`,
-			triggers: [path],
-		}, { deleteBeforeReplace: true });
+		const mkdir = new Mkdir(name, {
+			args: {
+				directory: [path],
+				parents: true,
+			},
+		}, { parent: this });
 
+		this.op = mkdir;
 		this.path = path;
 
 		this.registerOutputs({
+			op: mkdir,
 			path,
 		});
 	}

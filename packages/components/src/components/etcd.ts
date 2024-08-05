@@ -1,9 +1,9 @@
-import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { Architecture, EtcdInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { CommandComponent, CommandComponentArgs } from './command';
 import { Directory } from './directory';
+import { Mkdir } from '@unmango/baremetal/coreutils';
 
-export interface EtcdArgs extends CommandComponentArgs {
+export interface EtcdArgs {
 	arch: Architecture;
 	caCertPem: Input<string>;
 	caKeyPem: Input<string>;
@@ -13,7 +13,7 @@ export interface EtcdArgs extends CommandComponentArgs {
 	version: Input<string>;
 }
 
-export class Etcd extends CommandComponent {
+export class Etcd extends ComponentResource {
 	public readonly directory!: Output<string>;
 
 	constructor(name: string, args: EtcdArgs, opts?: ComponentResourceOptions) {
@@ -23,27 +23,34 @@ export class Etcd extends CommandComponent {
 		const directory = output('/usr/local/bin');
 		const etcdPkiPath = interpolate`${args.certsDirectory}/etcd`;
 
-		const binMkdir = this.mkdir('bin-mkdir', directory);
-		const install = this.exec(EtcdInstall, name, {
-			architecture: args.arch,
-			directory,
-			version: args.version,
-		}, { dependsOn: binMkdir });
+		const binMkdir = new Mkdir('bin-mkdir', {
+			args: {
+				directory: [directory],
+				parents: true,
+			},
+		}, { parent: this });
 
-		const pkiMkdir = this.mkdir('pki-mkdir', etcdPkiPath);
-		const certTee = this.tee('cert-tee', {
-			path: interpolate`${etcdPkiPath}/ca.crt`,
-			content: args.caCertPem,
-		}, { dependsOn: pkiMkdir });
+		// TODO
+		// const install = this.exec(EtcdInstall, name, {
+		// 	architecture: args.arch,
+		// 	directory,
+		// 	version: args.version,
+		// }, { dependsOn: binMkdir });
 
-		const keyTee = this.tee('key-tee', {
-			path: interpolate`${etcdPkiPath}/ca.key`,
-			content: args.caKeyPem,
-			secret: true,
-		}, {
-			dependsOn: pkiMkdir,
-			additionalSecretOutputs: ['stdout'],
-		});
+		// const pkiMkdir = this.mkdir('pki-mkdir', etcdPkiPath);
+		// const certTee = this.tee('cert-tee', {
+		// 	path: interpolate`${etcdPkiPath}/ca.crt`,
+		// 	content: args.caCertPem,
+		// }, { dependsOn: pkiMkdir });
+
+		// const keyTee = this.tee('key-tee', {
+		// 	path: interpolate`${etcdPkiPath}/ca.key`,
+		// 	content: args.caKeyPem,
+		// 	secret: true,
+		// }, {
+		// 	dependsOn: pkiMkdir,
+		// 	additionalSecretOutputs: ['stdout'],
+		// });
 
 		// const certs = this.initAllCerts(kubeadmcfgPath, {
 		// 	dependsOn: [certTee, keyTee],
@@ -70,11 +77,11 @@ export class Etcd extends CommandComponent {
 		// 	delete: interpolate`rm -f ${manifestDir}/etcd.yaml`,
 		// }, { dependsOn: certs, deleteBeforeReplace: true });
 
-		const varLib = this.exec(Directory, 'var-lib-etcd', {
-			path: '/var/lib/etcd',
-		});
+		// const varLib = this.exec(Directory, 'var-lib-etcd', {
+		// 	path: '/var/lib/etcd',
+		// });
 
-		this.directory = install.directory;
+		// this.directory = install.directory;
 
 		this.registerOutputs({
 			directory: this.directory,
