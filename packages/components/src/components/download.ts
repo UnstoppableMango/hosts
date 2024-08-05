@@ -1,6 +1,7 @@
 import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { basename } from 'node:path';
 import { CommandComponent, CommandComponentArgs } from './command';
+import { remote } from '@pulumi/command';
 
 export interface DownloadArgs extends CommandComponentArgs {
 	readonly url: Input<string>;
@@ -8,6 +9,9 @@ export interface DownloadArgs extends CommandComponentArgs {
 
 export class Download extends CommandComponent {
 	public readonly path!: Output<string>;
+	public readonly url!: Output<string>;
+	public readonly dir!: remote.Command;
+	public readonly dl!: remote.Command;
 
 	constructor(name: string, args: DownloadArgs, opts?: ComponentResourceOptions) {
 		super('hosts:index:Download', name, args, opts);
@@ -25,8 +29,16 @@ export class Download extends CommandComponent {
 			destination: dirName,
 		}, { dependsOn: dir });
 
+		this.dir = dir;
+		this.dl = wget;
 		this.path = path;
+		this.url = url;
 
-		this.registerOutputs({ dir, path, wget });
+		this.registerOutputs({
+			dir,
+			dl: this.dl,
+			path,
+			url,
+		});
 	}
 }

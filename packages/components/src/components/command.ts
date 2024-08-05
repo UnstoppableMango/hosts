@@ -97,7 +97,7 @@ export abstract class CommandComponent extends ComponentResource {
 		opts?: CustomResourceOptions,
 	): remote.Command {
 		return this.cmd(name, {
-			create: interpolate`wget --directory-prefix ${args.destination} ${args.url}`,
+			create: interpolate`wget --quiet --directory-prefix ${args.destination} ${args.url}`,
 			delete: args.delete,
 			triggers: [args.destination, args.url, args.delete],
 		}, { deleteBeforeReplace: true, ...opts });
