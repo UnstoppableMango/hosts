@@ -1,20 +1,19 @@
-import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { CommandComponent, CommandComponentArgs } from './command';
+import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { Download } from './download';
-import { remote } from '@pulumi/command';
+import { Mkdir, Tar } from '@unmango/baremetal/cmd';
 
-export interface ArchiveInstallArgs extends CommandComponentArgs {
+export interface ArchiveInstallArgs {
 	archiveName: Input<string>;
 	binName: Input<string>;
 	directory?: Input<string>;
 	url: Input<string>;
 }
 
-export class ArchiveInstall extends CommandComponent {
+export class ArchiveInstall extends ComponentResource {
 	public readonly dir!: Output<string>;
 	public readonly path!: Output<string>;
 	public readonly download!: Download;
-	public readonly tar!: remote.Command;
+	public readonly tar!: Tar;
 
 	constructor(name: string, args: ArchiveInstallArgs, opts?: ComponentResourceOptions) {
 		super('hosts:index:ArchiveInstall', name, args, opts);
@@ -24,16 +23,22 @@ export class ArchiveInstall extends CommandComponent {
 		const binName = output(args.binName);
 		const binPath = interpolate`${binDir}/${binName}`;
 
-		const download = this.exec(Download, name, { url: args.url });
-		const binMkdir = this.cmd('bin-mkdir', {
-			create: interpolate`mkdir -p ${binDir}`,
-		});
+		const download = new Download(name, {
+			url: args.url,
+		}, { parent: this });
 
-		const tar = this.cmd('tar', {
-			create: interpolate`tar -C ${binDir} -zxvf ${download.path} ${binName}`,
-			delete: interpolate`rm -f ${binPath}`,
-			triggers: [binDir, download.path, binName],
-		}, { dependsOn: [binMkdir, download] });
+		const binMkdir = new Mkdir('bin-mkdir', {
+			directory: [binDir],
+			parents: true,
+		}, { parent: this });
+
+		const tar = new Tar('tar', {
+			extract: true,
+			gzip: true,
+			verbose: true,
+			args: [binName],
+			file: download.path,
+		}, { parent: this, dependsOn: [binMkdir, download] })
 
 		this.dir = binDir;
 		this.download = download;

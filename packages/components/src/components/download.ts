@@ -1,17 +1,16 @@
-import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { basename } from 'node:path';
-import { CommandComponent, CommandComponentArgs } from './command';
-import { remote } from '@pulumi/command';
+import { Mktemp, Wget } from '@unmango/baremetal/cmd';
 
-export interface DownloadArgs extends CommandComponentArgs {
+export interface DownloadArgs {
 	readonly url: Input<string>;
 }
 
-export class Download extends CommandComponent {
+export class Download extends ComponentResource {
 	public readonly path!: Output<string>;
 	public readonly url!: Output<string>;
-	public readonly dir!: remote.Command;
-	public readonly dl!: remote.Command;
+	public readonly dir!: Mktemp;
+	public readonly dl!: Wget;
 
 	constructor(name: string, args: DownloadArgs, opts?: ComponentResourceOptions) {
 		super('hosts:index:Download', name, args, opts);
@@ -20,14 +19,17 @@ export class Download extends CommandComponent {
 		const url = output(args.url);
 		const binName = url.apply(basename);
 
-		const dir = this.mktemp('mktemp', { triggers: [url] });
+		const dir = new Mktemp('mktemp', {
+			directory: true,
+		}, { parent: this });
+
 		const dirName = dir.stdout;
 		const path = interpolate`${dirName}/${binName}`;
 
-		const wget = this.wget('wget', {
-			url: args.url,
-			destination: dirName,
-		}, { dependsOn: dir });
+		const wget = new Wget('wget', {
+			urls: [args.url],
+			directoryPrefix: dirName,
+		}, { parent: this, dependsOn: dir });
 
 		this.dir = dir;
 		this.dl = wget;
