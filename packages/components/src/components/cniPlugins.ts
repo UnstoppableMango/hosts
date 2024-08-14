@@ -17,11 +17,11 @@ export class CniPlugins extends ComponentResource {
 		super('hosts:index:CniPlugins', name, args, opts);
 		if (opts?.urn) return;
 
-    const architecture = output(args.arch);
+		const architecture = output(args.arch);
 		const directory = '/opt/cni/bin';
-    const version = output(args.version ?? '1.3.0'); // TODO: Stateful versioning?
-    const archiveName = interpolate`cni-plugins-linux-${architecture}-v${version}.tgz`;
-    const url = interpolate`https://github.com/containernetworking/plugins/releases/download/v${version}/${archiveName}`;
+		const version = output(args.version ?? '1.3.0'); // TODO: Stateful versioning?
+		const archiveName = interpolate`cni-plugins-linux-${architecture}-v${version}.tgz`;
+		const url = interpolate`https://github.com/containernetworking/plugins/releases/download/v${version}/${archiveName}`;
 
 		const mkdir = new Mkdir('bin-mkdir', {
 			args: {
@@ -34,26 +34,26 @@ export class CniPlugins extends ComponentResource {
 			archiveName,
 			url,
 			directory,
-			stripComponents: 1,
+			noAnchor: true,
 			files: [
-        'bandwidth',
-        'bridge',
-        'dhcp',
-        'dummy',
-        'firewall',
-        'host-device',
-        'host-local',
-        'ipvlan',
-        'loopback',
-        'macvlan',
-        'portmap',
-        'ptp',
-        'sbr',
-        'static',
-        'tap',
-        'tuning',
-        'vlan',
-        'vrf',
+				'bandwidth',
+				'bridge',
+				'dhcp',
+				'dummy',
+				'firewall',
+				'host-device',
+				'host-local',
+				'ipvlan',
+				'loopback',
+				'macvlan',
+				'portmap',
+				'ptp',
+				'sbr',
+				'static',
+				'tap',
+				'tuning',
+				'vlan',
+				'vrf',
 			],
 		});
 

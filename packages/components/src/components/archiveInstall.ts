@@ -8,6 +8,7 @@ export interface ArchiveInstallArgs {
 	directory?: Input<string>;
 	url: Input<string>;
 	stripComponents?: Input<number>;
+	noAnchor?: Input<boolean>;
 }
 
 export class ArchiveInstall extends ComponentResource {
@@ -42,6 +43,7 @@ export class ArchiveInstall extends ComponentResource {
 				file: download.path,
 				directory: binDir,
 				stripComponents: args.stripComponents,
+				noAnchored: args.noAnchor,
 			},
 		}, { parent: this, dependsOn: [binMkdir, download] })
 

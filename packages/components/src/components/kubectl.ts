@@ -1,7 +1,6 @@
 import { ComponentResource, ComponentResourceOptions, Input, interpolate, output } from '@pulumi/pulumi';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import { BinaryInstall } from './binaryInstall';
-import { Chmod } from '@unmango/baremetal/coreutils';
 
 export interface KubectlArgs {
 	arch: Architecture;
@@ -25,16 +24,8 @@ export class Kubectl extends ComponentResource {
 			binName,
 		}, { parent: this });
 
-		const chmod = new Chmod('bin-chmod', {
-			args: {
-				files: [install.path],
-				mode: ['+x'],
-			},
-		}, { parent: this });
-
 		this.registerOutputs({
 			install,
-			chmod,
 		});
 	}
 }

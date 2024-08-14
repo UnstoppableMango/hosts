@@ -24,7 +24,6 @@ export class Crictl extends ComponentResource {
 			archiveName,
 			url,
 			directory,
-			stripComponents: 1,
 			files: ['crictl'],
 		}, { parent: this });
 
