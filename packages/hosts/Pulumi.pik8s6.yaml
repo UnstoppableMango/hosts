@@ -1,14 +1,15 @@
 config:
-  hosts:hostname: pik8s6
-  hosts:role: controlplane
+  baremetal:address: 192.168.1.106
   hosts:arch: arm64
+  hosts:clusterIp: 192.168.1.106
+  hosts:hostname: pik8s6
   hosts:installDisk: /dev/mmcblk0
   hosts:ip: 192.168.1.106
-  hosts:clusterIp: 192.168.1.106
+  hosts:role: controlplane
   hosts:vipInterface: eth0
   hosts:vlans:
     eth0.69:
-      id: 69
-      link: eth0
       addresses:
         - 10.69.1.3/16
+      id: 69
+      link: eth0

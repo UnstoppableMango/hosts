@@ -46,6 +46,10 @@ export const workers = requireZod(z.array(HostInfo), 'workers');
 
 export const hosts = [...controlplanes, ...workers];
 
+export const provisionerAddress = ((c: Config): string => {
+	return `${c.require('address')}:${c.require('port')}`;
+})(new Config('baremetal'));
+
 const pkiRef = new StackReference('pki', {
 	name: 'UnstoppableMango/pki/prod',
 });

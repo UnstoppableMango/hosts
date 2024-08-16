@@ -1,32 +1,70 @@
-import { ComponentResourceOptions, Input, Output } from '@pulumi/pulumi';
-import { Architecture, CniPluginsInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { CommandComponent, CommandComponentArgs } from './command';
+import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { Mkdir } from '@unmango/baremetal/coreutils';
+import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
+import { ArchiveInstall } from './archiveInstall';
 
-export interface CniPluginsArgs extends CommandComponentArgs {
+export interface CniPluginsArgs {
 	arch: Architecture;
 	version: Input<string>;
 }
 
-export class CniPlugins extends CommandComponent {
+export class CniPlugins extends ComponentResource {
 	public readonly directory!: Output<string>;
+	public readonly mkdir!: Mkdir;
+	public readonly install!: ArchiveInstall;
 
 	constructor(name: string, args: CniPluginsArgs, opts?: ComponentResourceOptions) {
 		super('hosts:index:CniPlugins', name, args, opts);
 		if (opts?.urn) return;
 
+		const architecture = output(args.arch);
 		const directory = '/opt/cni/bin';
+		const version = output(args.version ?? '1.3.0'); // TODO: Stateful versioning?
+		const archiveName = interpolate`cni-plugins-linux-${architecture}-v${version}.tgz`;
+		const url =
+			interpolate`https://github.com/containernetworking/plugins/releases/download/v${version}/${archiveName}`;
 
-		const mkdir = this.mkdir('bin-mkdir', directory);
-		const install = this.exec(CniPluginsInstall, name, {
-			architecture: args.arch,
+		const mkdir = new Mkdir('bin-mkdir', {
+			args: {
+				directory: [directory],
+				parents: true,
+			},
+		}, { parent: this });
+
+		const install = new ArchiveInstall(name, {
+			archiveName,
+			url,
 			directory,
-			version: args.version,
-		}, { dependsOn: mkdir });
+			noAnchor: true,
+			files: [
+				'bandwidth',
+				'bridge',
+				'dhcp',
+				'dummy',
+				'firewall',
+				'host-device',
+				'host-local',
+				'ipvlan',
+				'loopback',
+				'macvlan',
+				'portmap',
+				'ptp',
+				'sbr',
+				'static',
+				'tap',
+				'tuning',
+				'vlan',
+				'vrf',
+			],
+		}, { parent: this });
 
-		this.directory = install.directory;
+		this.directory = install.path;
+		this.mkdir = mkdir;
+		this.install = install;
 
 		this.registerOutputs({
-			directory: this.directory,
+			directory,
+			mkdir,
 			install,
 		});
 	}

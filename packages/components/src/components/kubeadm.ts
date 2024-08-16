@@ -1,14 +1,24 @@
-import { all, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { Architecture, KubeadmInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
+import {
+	all,
+	asset,
+	ComponentResource,
+	ComponentResourceOptions,
+	Input,
+	interpolate,
+	Output,
+	output,
+} from '@pulumi/pulumi';
+import { Chmod, Tee } from '@unmango/baremetal/coreutils';
+import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import * as YAML from 'yaml';
-import { CommandComponent, CommandComponentArgs } from './command';
+import { BinaryInstall } from './binaryInstall';
 
 interface HostInfo {
 	hostname: string;
 	ip: string;
 }
 
-export interface KubeadmArgs extends CommandComponentArgs {
+export interface KubeadmArgs {
 	arch: Architecture;
 	certificatesDirectory: Input<string>;
 	caCertPem: Input<string>;
@@ -20,7 +30,7 @@ export interface KubeadmArgs extends CommandComponentArgs {
 	version: Input<string>;
 }
 
-export class Kubeadm extends CommandComponent {
+export class Kubeadm extends ComponentResource {
 	public readonly configurationPath!: Output<string>;
 	public readonly path!: Output<string>;
 
@@ -33,51 +43,67 @@ export class Kubeadm extends CommandComponent {
 		const host = args.hosts.find(x => x.hostname === hostname);
 		if (!host) throw new Error('Unable to match host');
 
+		const architecture = output(args.arch);
+		const binName = 'kubeadm';
+		const directory = output('/usr/local/bin');
+		const version = output(args.version);
+		const url = interpolate`https://dl.k8s.io/release/v${version}/bin/linux/${architecture}/${binName}`;
+
 		const certificatesDirectory = output(args.certificatesDirectory);
 		const hostnames = args.hosts.map(x => x.hostname);
 		const ips = args.hosts.map(x => x.ip);
 
-		const certTee = this.tee('ca-cert', {
-			path: interpolate`${certificatesDirectory}/ca.crt`,
-			content: args.caCertPem,
-		});
+		const certTee = new Tee('ca-cert', {
+			args: {
+				files: [interpolate`${certificatesDirectory}/ca.crt`],
+				stdin: output(args.caCertPem),
+			},
+		}, { parent: this });
 
-		const keyTee = this.tee('ca-key', {
-			path: interpolate`${certificatesDirectory}/ca.key`,
-			content: args.caKeyPem,
-		});
+		const keyTee = new Tee('ca-key', {
+			args: {
+				files: [interpolate`${certificatesDirectory}/ca.crt`],
+				stdin: output(args.caCertPem),
+			},
+		}, { parent: this });
 
 		const configPath = interpolate`${args.kubernetesDirectory}/kubeadmcfg.yaml`;
-		const config = this.tee('config', {
-			content: all([
-				certificatesDirectory,
-				args.version,
-			]).apply(([certDir, version]) =>
-				[
-					initConfiguration(hostname, host.ip),
-					clusterConfiguration(
-						host.ip,
-						hostname,
-						args.clusterEndpoint,
-						certDir,
-						hostnames,
-						ips,
-						version,
-					),
-				].join('---\n')
-			),
-			path: configPath,
-		});
 
-		const install = this.exec(KubeadmInstall, name, {
-			architecture: args.arch,
-			version: args.version,
-		});
+		const config = new Tee('config', {
+			args: {
+				files: [configPath],
+				stdin: all([
+					certificatesDirectory,
+					args.version,
+				]).apply(([certDir, version]) =>
+					[
+						initConfiguration(hostname, host.ip),
+						clusterConfiguration(
+							host.ip,
+							hostname,
+							args.clusterEndpoint,
+							certDir,
+							hostnames,
+							ips,
+							version,
+						),
+					].join('---\n')
+				),
+			},
+		}, { parent: this });
 
-		const chmod = this.chmod('bin-chmod', {
-			mode: '+x',
-			path: install.path,
-		}, { dependsOn: install });
+		const install = new BinaryInstall(name, {
+			url,
+			directory,
+			binName,
+		}, { parent: this });
+
+		const chmod = new Chmod('bin-chmod', {
+			args: {
+				mode: ['+x'],
+				files: [install.path],
+			},
+		}, { parent: this, dependsOn: install });
 
 		this.configurationPath = configPath;
 		this.path = install.path;

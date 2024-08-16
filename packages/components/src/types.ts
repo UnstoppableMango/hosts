@@ -44,6 +44,7 @@ export const Node = z.object({
 });
 
 export const Versions = z.object({
+	baremetal: z.string(),
 	cniPlugins: z.string(),
 	containerd: z.string(),
 	crictl: z.string(),

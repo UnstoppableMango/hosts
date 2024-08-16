@@ -1,14 +1,14 @@
-import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { CommandComponent, CommandComponentArgs } from './command';
+import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { Chmod, Mkdir, Mv } from '@unmango/baremetal/coreutils';
 import { Download } from './download';
 
-export interface BinaryInstallArgs extends CommandComponentArgs {
+export interface BinaryInstallArgs {
 	binName: Input<string>;
 	directory?: Input<string>;
 	url: Input<string>;
 }
 
-export class BinaryInstall extends CommandComponent {
+export class BinaryInstall extends ComponentResource {
 	public readonly path!: Output<string>;
 
 	constructor(name: string, args: BinaryInstallArgs, opts?: ComponentResourceOptions) {
@@ -19,23 +19,34 @@ export class BinaryInstall extends CommandComponent {
 		const binName = output(args.binName);
 		const binPath = interpolate`${binDir}/${binName}`;
 
-		const download = this.exec(Download, name, { url: args.url });
-		const binMkdir = this.cmd('bin-mkdir', {
-			create: interpolate`mkdir -p ${binDir}`,
-		});
+		const download = new Download(name, {
+			url: args.url,
+		}, { parent: this });
 
-		const binMv = this.cmd('bin-mv', {
-			create: interpolate`mv ${download.path} ${binPath}`,
-			delete: interpolate`rm -f ${binPath}`,
+		const binMkdir = new Mkdir('bin-mkdir', {
+			args: {
+				directory: [binDir],
+				parents: true,
+			},
+		}, { parent: this });
+
+		const binMv = new Mv('bin-mv', {
+			args: {
+				source: [download.path],
+				destination: binPath,
+			},
 		}, {
+			parent: this,
 			dependsOn: [download, binMkdir],
-			deleteBeforeReplace: true,
 		});
 
-		const chmod = this.chmod('bin-chmod', {
-			mode: '+x',
-			path: binPath,
-		}, { dependsOn: binMv });
+		const chmod = new Chmod('bin-chmod', {
+			args: {
+				mode: ['+x'],
+				files: [binPath],
+			},
+			triggers: [download.path],
+		}, { parent: this, dependsOn: binMv });
 
 		this.path = binPath;
 

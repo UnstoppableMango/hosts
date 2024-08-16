@@ -1,16 +1,15 @@
 import { remote } from '@pulumi/command';
-import { ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import * as YAML from 'yaml';
 import { NetplanConfig, Network } from '../netplan';
-import { CommandComponent, CommandComponentArgs } from './command';
 
-export interface NetplanArgs extends CommandComponentArgs {
+export interface NetplanArgs {
 	priority: Input<number>;
 	name: Input<string>;
 	config: Input<Network>;
 }
 
-export class Netplan extends CommandComponent {
+export class Netplan extends ComponentResource {
 	public readonly remove!: remote.Command;
 	public readonly configTee!: remote.Command;
 	public readonly configChmod!: remote.Command;
@@ -23,35 +22,35 @@ export class Netplan extends CommandComponent {
 		if (opts?.urn) return;
 
 		const file = interpolate`/etc/netplan/${args.priority}-${args.name}.yaml`;
-		const remove = this.cmd('remove-netplan', {
-			delete: 'netplan apply',
-		});
+		// const remove = this.cmd('remove-netplan', {
+		// 	delete: 'netplan apply',
+		// });
 
-		const content = output(args.config)
-			.apply<NetplanConfig>(network => ({ network }))
-			.apply(YAML.stringify);
+		// const content = output(args.config)
+		// 	.apply<NetplanConfig>(network => ({ network }))
+		// 	.apply(YAML.stringify);
 
-		const config = this.tee(`config-tee`, {
-			content: content,
-			path: file,
-		}, { dependsOn: remove });
+		// const config = this.tee(`config-tee`, {
+		// 	content: content,
+		// 	path: file,
+		// }, { dependsOn: remove });
 
-		const chmod = this.chmod('config-chmod', {
-			mode: '600',
-			path: file,
-		}, { dependsOn: config });
+		// const chmod = this.chmod('config-chmod', {
+		// 	mode: '600',
+		// 	path: file,
+		// }, { dependsOn: config });
 
-		const apply = this.cmd('apply-netplan', {
-			create: 'netplan apply',
-			triggers: [config.stdin],
-		}, { dependsOn: [config, chmod] });
+		// const apply = this.cmd('apply-netplan', {
+		// 	create: 'netplan apply',
+		// 	triggers: [config.stdin],
+		// }, { dependsOn: [config, chmod] });
 
-		this.remove = remove;
-		this.file = file;
-		this.content = content;
-		this.configTee = config;
-		this.configChmod = chmod;
-		this.apply = apply;
+		// this.remove = remove;
+		// this.file = file;
+		// this.content = content;
+		// this.configTee = config;
+		// this.configChmod = chmod;
+		// this.apply = apply;
 
 		this.registerOutputs({
 			remove: this.remove,
