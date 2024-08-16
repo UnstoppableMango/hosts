@@ -1,6 +1,6 @@
 import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { Download } from './download';
 import { Chmod, Mkdir, Mv } from '@unmango/baremetal/coreutils';
+import { Download } from './download';
 
 export interface BinaryInstallArgs {
 	binName: Input<string>;

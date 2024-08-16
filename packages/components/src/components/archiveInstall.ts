@@ -1,6 +1,6 @@
 import { ComponentResource, ComponentResourceOptions, Input, Output, output } from '@pulumi/pulumi';
-import { Download } from './download';
 import { Mkdir, Tar } from '@unmango/baremetal/coreutils';
+import { Download } from './download';
 
 export interface ArchiveInstallArgs {
 	files: string[];
@@ -45,7 +45,7 @@ export class ArchiveInstall extends ComponentResource {
 				stripComponents: args.stripComponents,
 				noAnchored: args.noAnchor,
 			},
-		}, { parent: this, dependsOn: [binMkdir, download] })
+		}, { parent: this, dependsOn: [binMkdir, download] });
 
 		this.dir = binDir;
 		this.download = download;

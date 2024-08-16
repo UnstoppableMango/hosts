@@ -14,11 +14,12 @@ export class Crictl extends ComponentResource {
 		super('hosts:index:Crictl', name, args, opts);
 		if (opts?.urn) return;
 
-    const architecture = output(args.arch);
-    const version = output(args.version);
-    const directory = output('/usr/local/bin');
-    const archiveName = interpolate`crictl-v${version}-linux-${architecture}.tar.gz`;
-    const url = interpolate`https://github.com/kubernetes-sigs/cri-tools/releases/download/v${version}/crictl-v${version}-linux-${architecture}.tar.gz`;
+		const architecture = output(args.arch);
+		const version = output(args.version);
+		const directory = output('/usr/local/bin');
+		const archiveName = interpolate`crictl-v${version}-linux-${architecture}.tar.gz`;
+		const url =
+			interpolate`https://github.com/kubernetes-sigs/cri-tools/releases/download/v${version}/crictl-v${version}-linux-${architecture}.tar.gz`;
 
 		const install = new ArchiveInstall(name, {
 			archiveName,

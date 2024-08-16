@@ -1,6 +1,6 @@
 import { asset, ComponentResource, ComponentResourceOptions, Input, interpolate } from '@pulumi/pulumi';
-import * as YAML from '../yaml';
 import { Tee } from '@unmango/baremetal/coreutils';
+import * as YAML from '../yaml';
 
 export interface KubeVipArgs {
 	clusterEndpoint: Input<string>;

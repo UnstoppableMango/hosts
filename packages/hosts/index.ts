@@ -1,14 +1,6 @@
 import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
-import {
-	CniPlugins,
-	Crictl,
-	Directory,
-	Kubeadm,
-	Kubectl,
-	Kubelet,
-	Runner,
-} from 'components';
+import { CniPlugins, Crictl, Directory, Kubeadm, Kubectl, Kubelet, Runner } from 'components';
 import * as config from './config';
 
 const name = config.hostname;
@@ -23,7 +15,8 @@ const provisioner = runner.run(remote.Command, 'provisioner', {
 		PULUMI_COMMAND_IREADTHEDOCS: 'true',
 		PULUMI_COMMAND_LISTEN_ADDRESS: config.provisionerAddress,
 	},
-  create: pulumi.interpolate`curl -L https://github.com/unmango/pulumi-baremetal/releases/download/v${config.versions.baremetal}/install.sh | bash`,
+	create: pulumi
+		.interpolate`curl -L https://github.com/unmango/pulumi-baremetal/releases/download/v${config.versions.baremetal}/install.sh | bash`,
 });
 
 export const provisionerInstallLogs = provisioner.stdout;

@@ -1,7 +1,7 @@
-import { ComponentResource, ComponentResourceOptions, Input, interpolate, output, Output } from '@pulumi/pulumi';
+import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { Mkdir } from '@unmango/baremetal/coreutils';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import { ArchiveInstall } from './archiveInstall';
-import { Mkdir } from '@unmango/baremetal/coreutils';
 
 export interface CniPluginsArgs {
 	arch: Architecture;
@@ -21,7 +21,8 @@ export class CniPlugins extends ComponentResource {
 		const directory = '/opt/cni/bin';
 		const version = output(args.version ?? '1.3.0'); // TODO: Stateful versioning?
 		const archiveName = interpolate`cni-plugins-linux-${architecture}-v${version}.tgz`;
-		const url = interpolate`https://github.com/containernetworking/plugins/releases/download/v${version}/${archiveName}`;
+		const url =
+			interpolate`https://github.com/containernetworking/plugins/releases/download/v${version}/${archiveName}`;
 
 		const mkdir = new Mkdir('bin-mkdir', {
 			args: {

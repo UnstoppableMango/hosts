@@ -12,11 +12,11 @@ export class Kubectl extends ComponentResource {
 		super('hosts:index:Kubectl', name, args, opts);
 		if (opts?.urn) return;
 
-    const architecture = output(args.arch);
-    const binName = 'kubectl';
-    const directory = output('/usr/local/bin');
-    const version = output(args.version);
-    const url = interpolate`https://dl.k8s.io/release/v${version}/bin/linux/${architecture}/${binName}`;
+		const architecture = output(args.arch);
+		const binName = 'kubectl';
+		const directory = output('/usr/local/bin');
+		const version = output(args.version);
+		const url = interpolate`https://dl.k8s.io/release/v${version}/bin/linux/${architecture}/${binName}`;
 
 		const install = new BinaryInstall(name, {
 			url,

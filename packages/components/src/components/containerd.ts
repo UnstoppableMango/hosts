@@ -1,8 +1,8 @@
 import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
-import { ArchiveInstall } from './archiveInstall';
 import { Mkdir, Tee } from '@unmango/baremetal/coreutils';
+import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import * as fs from 'node:fs/promises';
+import { ArchiveInstall } from './archiveInstall';
 
 export interface ContainerdArgs {
 	arch: Architecture;

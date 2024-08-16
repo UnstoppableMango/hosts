@@ -1,10 +1,19 @@
-import { all, asset, ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import {
+	all,
+	asset,
+	ComponentResource,
+	ComponentResourceOptions,
+	Input,
+	interpolate,
+	Output,
+	output,
+} from '@pulumi/pulumi';
+import { Mkdir, Tee } from '@unmango/baremetal/coreutils';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import * as systemd from '../systemd';
 import * as YAML from '../yaml';
 import { BinaryInstall } from './binaryInstall';
 import { Directory } from './directory';
-import { Mkdir, Tee } from '@unmango/baremetal/coreutils';
 
 export interface KubeletArgs {
 	arch: Architecture;

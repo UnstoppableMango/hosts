@@ -1,7 +1,7 @@
 import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { Mkdir } from '@unmango/baremetal/coreutils';
 import { Architecture, EtcdInstall } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import { Directory } from './directory';
-import { Mkdir } from '@unmango/baremetal/coreutils';
 
 export interface EtcdArgs {
 	arch: Architecture;
