@@ -1,4 +1,5 @@
 config:
+  baremetal:address: 192.168.1.115
   hosts:hostname: pik8s8
   hosts:role: worker
   hosts:arch: arm64

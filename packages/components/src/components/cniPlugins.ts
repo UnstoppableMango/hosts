@@ -55,7 +55,7 @@ export class CniPlugins extends ComponentResource {
 				'vlan',
 				'vrf',
 			],
-		});
+		}, { parent: this });
 
 		this.directory = install.path;
 		this.mkdir = mkdir;

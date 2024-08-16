@@ -1,4 +1,5 @@
 config:
+  baremetal:address: 192.168.1.11
   hosts:hostname: gaea
   hosts:role: worker
   hosts:arch: amd64

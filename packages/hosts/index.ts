@@ -1,25 +1,15 @@
 import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
 import {
-	ArchiveInstall,
 	CniPlugins,
-	Containerd,
 	Crictl,
 	Directory,
-	Etcd,
-	Ipv4PacketForwarding,
 	Kubeadm,
 	Kubectl,
 	Kubelet,
-	KubeVip,
-	Netplan,
-	Network,
-	Provisioner,
-	Runc,
 	Runner,
 } from 'components';
 import * as config from './config';
-import * as baremetal from '@unmango/baremetal/kubeadm';
 
 const name = config.hostname;
 
@@ -113,9 +103,9 @@ const cniPlugins = new CniPlugins(name, {
 // 	systemdDirectory: config.systemdDirectory,
 // }, { dependsOn: runc });
 
-const imagePull = new baremetal.Kubeadm('pull-images', {
-	args: { commands: ['config', 'images', 'pull'] },
-}, { dependsOn: [provisioner, kubeadm, crictl, cniPlugins] });
+// const imagePull = new baremetal.Kubeadm('pull-images', {
+// 	args: { commands: ['config', 'images', 'pull'] },
+// }, { dependsOn: [provisioner, kubeadm, crictl, cniPlugins] });
 
 const kubelet = new Kubelet(name, {
 	arch: config.arch,
@@ -125,7 +115,7 @@ const kubelet = new Kubelet(name, {
 	bootstrapKubeconfig: '/etc/kubernetes/bootstrap-kubelet.conf',
 	kubeconfig: '/etc/kubernetes/kubelet.conf',
 	containerdSocket: 'unix:///run/containerd/containerd.sock',
-}, { dependsOn: [k8sDir] });
+}, { dependsOn: [provisioner, k8sDir] });
 
 // const kubelet = runner.run(Kubelet, name, {
 // 	arch: config.arch,

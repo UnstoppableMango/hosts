@@ -16,9 +16,9 @@ HOSTS := $(shell cat ${WORKING_DIR}/hosts.txt)
 
 .PHONY: $(HOSTS) preview deploy components format
 preview: components $(DEPLOY)
-	$(DEPLOY) preview --cp
+	$(DEPLOY) preview
 deploy: components $(DEPLOY)
-	$(DEPLOY) up --cp
+	$(DEPLOY) up
 down: components $(DEPLOY)
 	$(DEPLOY) down
 

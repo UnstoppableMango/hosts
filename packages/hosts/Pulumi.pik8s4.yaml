@@ -1,4 +1,5 @@
 config:
+  baremetal:address: 192.168.1.104
   hosts:hostname: pik8s4
   hosts:role: controlplane
   hosts:arch: arm64

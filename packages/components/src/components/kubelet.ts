@@ -81,7 +81,7 @@ export class Kubelet extends ComponentResource {
 					},
 				}),
 			},
-		}, { parent: this });
+		}, { parent: this, dependsOn: configDir });
 
 		const systemdService = new Tee('systemd-service', {
 			args: {

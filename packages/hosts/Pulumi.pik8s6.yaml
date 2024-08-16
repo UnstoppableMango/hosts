@@ -1,6 +1,5 @@
 config:
   baremetal:address: 192.168.1.106
-  baremetal:port: 6969
   hosts:arch: arm64
   hosts:clusterIp: 192.168.1.106
   hosts:hostname: pik8s6
