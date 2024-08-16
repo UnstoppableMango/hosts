@@ -1,7 +1,8 @@
 import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { Mkdir } from '@unmango/baremetal/coreutils';
+import { Mkdir, Tee } from '@unmango/baremetal/coreutils';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import { ArchiveInstall } from './archiveInstall';
+import { YAML } from 'components';
 
 export interface CniPluginsArgs {
 	arch: Architecture;
@@ -56,6 +57,30 @@ export class CniPlugins extends ComponentResource {
 				'vlan',
 				'vrf',
 			],
+		}, { parent: this });
+
+		const config = new Tee('config', {
+			args: {
+				files: [`/etc/cni/net.d/config.yaml`],
+				stdin: YAML.stringify({
+					cniVersion: '1.0.0',
+					name: 'bridge',
+					type: 'bridge',
+					bridge: 'cni0',
+					ipam: {
+						type: 'host-local',
+						ranges: [{
+							subnet: '10.0.69.0/16',
+						}],
+						routes: [{
+							dst: '0.0.0.0/0',
+						}],
+					},
+					ipMasq: true,
+					isGateway: true,
+					subnet: '10.0.69.0/16',
+				}),
+			},
 		}, { parent: this });
 
 		this.directory = install.path;
