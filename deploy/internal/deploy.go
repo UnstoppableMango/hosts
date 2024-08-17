@@ -11,6 +11,7 @@ import (
 type Op string
 
 type DeployOpts struct {
+	Op                     Op
 	ControlPlanes, Workers []string
 	Logger                 *slog.Logger
 }
