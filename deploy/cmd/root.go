@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	hosts "github.com/unstoppablemango/hosts/deploy/internal"
 )
@@ -16,30 +16,23 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:       "deploy [OP]",
+	Use:       "deploy [op]",
 	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	ValidArgs: []string{"down", "preview", "up"},
 	Example:   "deploy up --cp",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := cmd.Context()
-		op := hosts.Op(args[0])
-		opts := hosts.DeployOpts{
+		app := hosts.NewApp(cmd.Context(), hosts.DeployOpts{
+			Op:            hosts.Op(args[0]),
 			ControlPlanes: controlplanes,
 			Workers:       workers,
 			Logger:        log,
-		}
+		})
 
-		if cp {
-			fmt.Println("Restricting to controlplanes")
-			opts.Workers = []string{}
-		}
+		_, err := tea.NewProgram(app,
+			tea.WithAltScreen(),
+		).Run()
 
-		if wk {
-			fmt.Println("Restricting to workers")
-			opts.ControlPlanes = []string{}
-		}
-
-		return hosts.Deploy(ctx, op, &opts)
+		return err
 	},
 }
 
