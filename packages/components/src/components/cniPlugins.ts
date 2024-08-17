@@ -59,14 +59,16 @@ export class CniPlugins extends ComponentResource {
 			],
 		}, { parent: this });
 
-		const config = new Tee('config', {
+		const bridge = new Tee('bridge', {
 			args: {
-				files: [`/etc/cni/net.d/config.yaml`],
-				stdin: YAML.stringify({
+				files: [`/etc/cni/net.d/10-bridge.conf`],
+				stdin: JSON.stringify({
 					cniVersion: '1.0.0',
 					name: 'bridge',
 					type: 'bridge',
 					bridge: 'cni0',
+					ipMasq: true,
+					isGateway: true,
 					ipam: {
 						type: 'host-local',
 						ranges: [{
@@ -76,9 +78,17 @@ export class CniPlugins extends ComponentResource {
 							dst: '0.0.0.0/0',
 						}],
 					},
-					ipMasq: true,
-					isGateway: true,
-					subnet: '10.0.69.0/16',
+				}),
+			},
+		}, { parent: this });
+
+		const loopback = new Tee('loopback', {
+			args: {
+				files: [`/etc/cni/net.d/99-loopback.conf`],
+				stdin: JSON.stringify({
+					cniVersion: '1.1.0',
+					name: 'lo',
+					type: 'loopback',
 				}),
 			},
 		}, { parent: this });
