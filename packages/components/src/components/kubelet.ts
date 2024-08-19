@@ -77,12 +77,13 @@ export class Kubelet extends ComponentResource {
 					cgroupDriver: 'systemd',
 					containerRuntimeEndpoint: args.containerdSocket,
 					staticPodPath: manifestDir,
+					podCIDR: '10.0.69.0/16',
 					authentication: {
 						anonymous: {
 							enabled: false,
 						},
 						webhook: {
-							enabled: false,
+							enabled: true,
 						},
 					},
 					authorization: {

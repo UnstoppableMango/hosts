@@ -593,10 +593,10 @@
   resolved "https://registry.yarnpkg.com/@types/tmp/-/tmp-0.2.6.tgz#d785ee90c52d7cc020e249c948c36f7b32d1e217"
   integrity sha512-chhaNf2oKHlRkDGt+tiKE2Z5aJ6qalm7Z9rlLdBwmOiAAf09YQvvoLXjWK4HWPF1xU/fqvMgfNfpVoBscA/tKA==
 
-"@unmango/baremetal@^0.0.34":
-  version "0.0.34"
-  resolved "https://registry.yarnpkg.com/@unmango/baremetal/-/baremetal-0.0.34.tgz#31cce2387dc2f2e33f23140ef17833285e603535"
-  integrity sha512-z7xtyA3AwD909MgWGH7kMOGeHcyzmOJrlXqZwtb8NBlHpJV4kakmib2GOtoRLPYB5f50Kb8D8xB0ElJsTtGlLA==
+"@unmango/baremetal@^0.0.37":
+  version "0.0.37"
+  resolved "https://registry.yarnpkg.com/@unmango/baremetal/-/baremetal-0.0.37.tgz#b7309fda075e130aa80f6fe0687289c50d1d4582"
+  integrity sha512-IUdeMokm5MtN8xwywn/VaLZE9NvhtheSdnyaukNQg0pPsd21dF+2pmlbNAJi1y2Egr5gizlS2ouhFJZPfJj4fA==
   dependencies:
     "@pulumi/command" "^1.0.0"
     "@pulumi/pulumi" "^3.42.0"
