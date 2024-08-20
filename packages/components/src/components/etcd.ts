@@ -52,10 +52,6 @@ export class Etcd extends ComponentResource {
 			},
 		}, { parent: this, dependsOn: pkiMkdir });
 
-		const etcdServer = new Command('etcd-server', {
-			args: ['kubeadm', 'init', 'phase', 'certs', 'etcd-server', '--config', kubeadmcfgPath],
-		}, { parent: this });
-
 		// const certs = this.initAllCerts(kubeadmcfgPath, {
 		// 	dependsOn: [certTee, keyTee],
 		// });

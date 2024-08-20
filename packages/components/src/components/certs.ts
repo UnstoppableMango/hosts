@@ -1,5 +1,6 @@
-import { all, ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { all, ComponentResource, ComponentResourceOptions, Input, Output, output } from '@pulumi/pulumi';
 import { Command } from '@unmango/baremetal';
+import { Cat } from '@unmango/baremetal/coreutils';
 import * as path from 'node:path';
 
 export interface CertsArgs {
@@ -17,40 +18,37 @@ export class Certs extends ComponentResource {
 
 		const kubeadmcfgPath = output(args.kubeadmcfgPath);
 		const pkiPath = output(args.pkiPath);
+		const etcdPkiPath = join(pkiPath, 'etcd');
 		const k8sDir = output(args.k8sDir);
 
-		// const key = new PrivateKey('apiserver', {
-		// 	algorithm: 'RSA',
-		// 	rsaBits: 4096,
-		// }, { parent: this });
+		const files = {
+			apiServerEtcdClientCsr: join(pkiPath, 'apiserver-etcd-client.csr'),
+			apiServerEtcdClientKey: join(pkiPath, 'apiserver-etcd-client.key'),
+			apiServerKubeletClientCsr: join(pkiPath, 'apiserver-kubelet-client.csr'),
+			apiServerKubeletClientKey: join(pkiPath, 'apiserver-kubelet-client.key'),
+			apiServerCsr: join(pkiPath, 'apiserver.csr'),
+			apiServerKey: join(pkiPath, 'apiserver.key'),
+			frontProxyClientCsr: join(pkiPath, 'front-proxy-client.csr'),
+			frontProxyClientKey: join(pkiPath, 'front-proxy-client.key'),
+			healthcheckClientCsr: join(etcdPkiPath, 'healthcheck-client.csr'),
+			healthcheckClientKey: join(etcdPkiPath, 'healthcheck-client.key'),
+			peerCsr: join(etcdPkiPath, 'peer.csr'),
+			peerKey: join(etcdPkiPath, 'peer.key'),
+			serverCsr: join(etcdPkiPath, 'server.csr'),
+			serverKey: join(etcdPkiPath, 'server.key'),
+			adminConf: join(k8sDir, 'admin.conf'),
+			adminConfCsr: join(k8sDir, 'admin.conf.csr'),
+			controllerManagerConf: join(k8sDir, 'controller-manager.conf'),
+			controllerManagerConfCsr: join(k8sDir, 'controller-manager.conf.csr'),
+			kubeletConf: join(k8sDir, 'kubelet.conf'),
+			kubeletConfCsr: join(k8sDir, 'kubelet.conf.csr'),
+			schedulerConf: join(k8sDir, 'scheduler.conf'),
+			schedulerConfCsr: join(k8sDir, 'scheduler.conf.csr'),
+			superAdminConf: join(k8sDir, 'super-admin.conf'),
+			superAdminConfCsr: join(k8sDir, 'super-admin.conf.csr'),
+		};
 
-		// const keyTee = new Tee('key-tee', {
-		// 	args: {
-		// 		files: [interpolate`${pkiPath}/apiserver.key`],
-		// 		stdin: key.privateKeyPem,
-		// 	},
-		// }, { parent: this, dependsOn: key });
-
-		// const req = new CertRequest('apiserver', {
-		// 	privateKeyPem: key.privateKeyPem,
-		// }, { parent: this });
-
-		// const cert = new LocallySignedCert('apiserver', {
-		// 	allowedUses: [],
-		// 	caCertPem: args.caCertPem,
-		// 	caPrivateKeyPem: args.caKeyPem,
-		// 	certRequestPem: req.certRequestPem,
-		// 	validityPeriodHours: 2046,
-		// }, { parent: this });
-
-		// const certTee = new Tee('cert-tee', {
-		// 	args: {
-		// 		files: [interpolate`${pkiPath}/apiserver.crt`],
-		// 		stdin: cert.certPem,
-		// 	},
-		// }, { parent: this, dependsOn: cert });
-
-		const initPhase = new Command('init-phase-certs', {
+		const init = new Command('init-phase-certs', {
 			create: [
 				'kubeadm',
 				'certs',
@@ -62,30 +60,14 @@ export class Certs extends ComponentResource {
 				'--kubeconfig-dir',
 				args.k8sDir,
 			],
-			delete: [
-				'rm',
-				'-rf',
-				join(pkiPath, 'apiserver-etcd-client.csr'),
-				join(pkiPath, 'apiserver-etcd-client.key'),
-				join(pkiPath, 'apiserver-kubelet-client.csr'),
-				join(pkiPath, 'apiserver-kubelet-client.key'),
-				join(pkiPath, 'apiserver.csr'),
-				join(pkiPath, 'apiserver.key'),
-				join(pkiPath, 'front-proxy-client.csr'),
-				join(pkiPath, 'front-proxy-client.key'),
-				'etcd',
-				join(k8sDir, 'admin.conf'),
-				join(k8sDir, 'admin.conf.csr'),
-				join(k8sDir, 'controller-manager.conf'),
-				join(k8sDir, 'controller-manager.conf.csr'),
-				join(k8sDir, 'kubelet.conf'),
-				join(k8sDir, 'kubelet.conf.csr'),
-				join(k8sDir, 'scheduler.conf'),
-				join(k8sDir, 'scheduler.conf.csr'),
-				join(k8sDir, 'super-admin.conf'),
-				join(k8sDir, 'super-admin.conf.csr'),
-			],
+			delete: ['rm', '-rf', ...Object.values(files)],
 		}, { parent: this });
+
+		const cats = Object.entries(files).map(([key, file]) => {
+			return new Cat(key, {
+				args: { files: [file] },
+			}, { parent: this, dependsOn: init });
+		});
 
 		this.registerOutputs({});
 	}

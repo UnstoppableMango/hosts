@@ -67,10 +67,6 @@ export class ApiServer extends ComponentResource {
 			},
 		}, { parent: this, dependsOn: cert });
 
-		const initPhase = new Command('init-phase-certs', {
-			args: ['kubeadm', 'init', 'phase', 'certs', 'apiserver', '--config', kubeadmcfgPath],
-		}, { parent: this, dependsOn: [keyTee, certTee] });
-
 		// const certs = this.initAllCerts(kubeadmcfgPath, {
 		// 	dependsOn: [certTee, keyTee],
 		// });
