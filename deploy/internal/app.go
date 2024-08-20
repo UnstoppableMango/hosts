@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type App struct {
@@ -17,7 +18,7 @@ type App struct {
 }
 
 func NewApp(ctx context.Context, opts DeployOpts) *App {
-	vp := viewport.New(50, 25)
+	vp := viewport.New(100, 25)
 	vp.SetContent(`Welcome to the chat room!
 Type a message and press Enter to send.`)
 
@@ -72,9 +73,9 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View implements tea.Model.
 func (a *App) View() string {
-	a.viewport.SetContent("This is column 1")
+	style := lipgloss.NewStyle().Border(lipgloss.NormalBorder())
 
-	return a.viewport.View()
+	return style.Render(a.viewport.View())
 }
 
 var _ tea.Model = &App{}
