@@ -1,6 +1,18 @@
 import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
-import { ApiServer, Certs, CniPlugins, Crictl, Directory, Etcd, Kubeadm, Kubectl, Kubelet, KubeVip, Runner } from 'components';
+import {
+	ApiServer,
+	Certs,
+	CniPlugins,
+	Crictl,
+	Directory,
+	Etcd,
+	Kubeadm,
+	Kubectl,
+	Kubelet,
+	KubeVip,
+	Runner,
+} from 'components';
 import * as config from './config';
 
 const name = config.hostname;
