@@ -117,6 +117,8 @@ if (config.role === 'controlplane') {
 	}
 
 	const certs = new Certs(name, {
+		etcdCa: config.etcdCa,
+		theclusterCa: config.theclusterCa,
 		k8sDir: k8sDir.path,
 		kubeadmcfgPath: kubeadm.configurationPath,
 		pkiPath: pkiDir.path,

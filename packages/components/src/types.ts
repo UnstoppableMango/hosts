@@ -12,6 +12,11 @@ export const Arch = z.union([
 	z.literal('arm64'),
 ]);
 
+export const CaPair = z.object({
+	privateKeyPem: z.string(),
+	certPem: z.string(),
+});
+
 export const Role = z.union([
 	z.literal('controlplane'),
 	z.literal('worker'),
@@ -56,6 +61,7 @@ export const Versions = z.object({
 });
 
 export type Arch = z.infer<typeof Arch>;
+export type CaPair = z.infer<typeof CaPair>;
 export type HostNames = z.infer<typeof HostNames>;
 export type Node = z.infer<typeof Node>;
 export type Role = z.infer<typeof Role>;
