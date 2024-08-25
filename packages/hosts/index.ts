@@ -1,5 +1,6 @@
 import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
+import { Command } from '@unmango/baremetal';
 import {
 	ApiServer,
 	Certs,
@@ -14,7 +15,6 @@ import {
 	Runner,
 } from 'components';
 import * as config from './config';
-import { Command } from '@unmango/baremetal';
 
 const name = config.hostname;
 
@@ -182,5 +182,3 @@ if (config.role === 'controlplane') {
 // 		version: config.versions.cniPlugins,
 // 	});
 // }
-
-export const kubeadmOutput = kubeadmPhases.map(x => x.stdout);

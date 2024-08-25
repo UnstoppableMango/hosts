@@ -10,7 +10,7 @@ const _1Week = 7 * 24;
 
 type CaPairArgs = {
 	[K in keyof CaPair]: Input<CaPair[K]>;
-}
+};
 
 export interface CertsArgs {
 	etcdCa: Input<CaPairArgs>;
@@ -148,7 +148,7 @@ export class Certs extends ComponentResource {
 		const frontProxyClient = this.create('front-proxy-client', theclusterCa, pkiPath);
 		const healthcheckClient = this.create('healthcheck-client', etcdCa, etcdPkiPath);
 		const peer = this.create('peer', etcdCa, etcdPkiPath);
-		const server = this.create('server',etcdCa, etcdPkiPath);
+		const server = this.create('server', etcdCa, etcdPkiPath);
 		const adminConf = this.create('admin.conf', theclusterCa, k8sDir);
 		const controllerManager = this.create('controller-manager.conf', theclusterCa, k8sDir);
 		const kubelet = this.create('kubelet.conf', theclusterCa, k8sDir);

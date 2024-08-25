@@ -1,12 +1,4 @@
-import {
-	all,
-	ComponentResource,
-	ComponentResourceOptions,
-	Input,
-	interpolate,
-	Output,
-	output,
-} from '@pulumi/pulumi';
+import { all, ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { Chmod, Tee } from '@unmango/baremetal/coreutils';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import * as YAML from 'yaml';
