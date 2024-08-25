@@ -106,6 +106,8 @@ const kubelet = new Kubelet(name, {
 	containerdSocket: 'unix:///run/containerd/containerd.sock',
 }, { dependsOn: [provisioner, k8sDir] });
 
+const kubeadmPhases: Command[] = [];
+
 if (config.role === 'controlplane') {
 	if (!config.vipInterface) {
 		throw new Error('ControlPlane requires a vipInterface');
@@ -131,13 +133,25 @@ if (config.role === 'controlplane') {
 		manifestDir: kubelet.manifestDir,
 	}, { dependsOn: [k8sDir] });
 
-	// const apiserver = new ApiServer(name, {
-	// 	arch: config.arch,
-	// 	kubeadmcfgPath: kubeadm.configurationPath,
-	// 	caCertPem: config.etcdCa.certPem,
-	// 	caKeyPem: config.etcdCa.privateKeyPem,
-	// 	pkiPath: pkiDir.path,
-	// }, { dependsOn: kubeadm });
+	const etcd = new Command('init-phase-etcd', {
+		create: ['kubeadm', 'init', 'phase', 'etcd'],
+	}, { dependsOn: [kubeadm, preflight] });
+	kubeadmPhases.push(etcd);
+
+	const controlPlane = new Command('init-phase-control-plane', {
+		create: ['kubeadm', 'init', 'phase', 'control-plane'],
+	}, { dependsOn: [kubeadm, preflight] });
+	kubeadmPhases.push(controlPlane);
+
+	const kubeletStart = new Command('init-phase-kubelet-start', {
+		create: ['kubeadm', 'init', 'phase', 'kubelet-start', '--config', kubeadm.configurationPath],
+	}, { dependsOn: [kubeadm, kubeVip, etcd, controlPlane] });
+	kubeadmPhases.push(kubeletStart);
+
+	const uploadConfig = new Command('init-phase-upload-config', {
+		create: ['kubeadm', 'init', 'phase', 'upload-config'],
+	}, { dependsOn: [kubeadm, kubeletStart] });
+	kubeadmPhases.push(uploadConfig);
 
 	// const etcd = new Etcd(name, {
 	// 	arch: config.arch,
