@@ -14,6 +14,7 @@ import {
 	Runner,
 } from 'components';
 import * as config from './config';
+import { Command } from '@unmango/baremetal';
 
 const name = config.hostname;
 
@@ -83,8 +84,6 @@ const kubeadm = new Kubeadm(name, {
 	hosts: config.hosts,
 	kubernetesDirectory: k8sDir.path,
 	certificatesDirectory: pkiDir.path,
-	caCertPem: config.theclusterCa.certPem,
-	caKeyPem: config.theclusterCa.privateKeyPem,
 }, { dependsOn: [provisioner, pkiDir] });
 
 const crictl = new Crictl(name, {
@@ -102,8 +101,8 @@ const kubelet = new Kubelet(name, {
 	version: config.versions.k8s,
 	kubernetesDirectory: k8sDir.path,
 	systemdDirectory: config.systemdDirectory,
-	bootstrapKubeconfig: '/etc/kubernetes/bootstrap-kubelet.conf',
-	kubeconfig: '/etc/kubernetes/kubelet.conf', // ??
+	bootstrapKubeconfig: '/etc/kubernetes/bootstrap-kubelet.conf', // Hoping to remove this if possible
+	kubeconfig: '/etc/kubernetes/kubelet.conf', // kubeadm generate-csr will create this
 	containerdSocket: 'unix:///run/containerd/containerd.sock',
 }, { dependsOn: [provisioner, k8sDir] });
 
@@ -124,13 +123,17 @@ if (config.role === 'controlplane') {
 		pkiPath: pkiDir.path,
 	}, { dependsOn: kubeadm });
 
+	const preflight = new Command('init-phase-preflight', {
+		create: ['kubeadm', 'init', 'phase', 'preflight', '--config', kubeadm.configurationPath],
+	}, { dependsOn: [kubeadm, certs] });
+
 	const kubeVip = new KubeVip(name, {
 		clusterEndpoint: config.clusterEndpoint,
 		interface: config.vipInterface,
-		kubeconfigPath: pulumi.interpolate`${k8sDir.path}/admin.conf`, // I think kubeadm init creates this
+		kubeconfigPath: certs.adminConfPath,
 		version: config.versions.kubeVip,
 		manifestDir: kubelet.manifestDir,
-	}, { dependsOn: [k8sDir, kubelet] });
+	}, { dependsOn: [k8sDir] });
 
 	// const apiserver = new ApiServer(name, {
 	// 	arch: config.arch,
@@ -183,3 +186,5 @@ if (config.role === 'controlplane') {
 // 		version: config.versions.cniPlugins,
 // 	});
 // }
+
+export const kubeadmOutput = kubeadmPhases.map(x => x.stdout);

@@ -1,7 +1,7 @@
-import { all, ComponentResource, ComponentResourceOptions, Input, Output, output } from '@pulumi/pulumi';
+import { all, ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { LocallySignedCert } from '@pulumi/tls';
 import { Command } from '@unmango/baremetal';
-import { Cat } from '@unmango/baremetal/coreutils';
+import { Cat, Tee } from '@unmango/baremetal/coreutils';
 import * as path from 'node:path';
 import { CaPair } from '../types';
 
@@ -20,8 +20,15 @@ export interface CertsArgs {
 	theclusterCa: Input<CaPairArgs>;
 }
 
+interface Group {
+	csr: Output<string>;
+	cert: LocallySignedCert;
+}
+
 export class Certs extends ComponentResource {
 	public readonly directory!: Output<string>;
+
+	public readonly init!: Command;
 
 	public readonly apiServerEtcdClientCsr!: Output<string>;
 	public readonly apiServerEtcdClientKey!: Output<string>;
@@ -48,6 +55,8 @@ export class Certs extends ComponentResource {
 	public readonly superAdminConf!: Output<string>;
 	public readonly superAdminConfCsr!: Output<string>;
 
+	public readonly adminConfPath!: Output<string>;
+
 	constructor(name: string, args: CertsArgs, opts?: ComponentResourceOptions) {
 		super('hosts:index:Certs', name, args, opts);
 		if (opts?.urn) return;
@@ -59,7 +68,7 @@ export class Certs extends ComponentResource {
 		const etcdPkiPath = join(pkiPath, 'etcd');
 		const k8sDir = output(args.k8sDir);
 
-		const files = {
+		const allFiles = {
 			apiServerEtcdClientCsr: join(pkiPath, 'apiserver-etcd-client.csr'),
 			apiServerEtcdClientKey: join(pkiPath, 'apiserver-etcd-client.key'),
 			apiServerKubeletClientCsr: join(pkiPath, 'apiserver-kubelet-client.csr'),
@@ -98,12 +107,29 @@ export class Certs extends ComponentResource {
 				'--kubeconfig-dir',
 				args.k8sDir,
 			],
-			delete: ['rm', '-rf', ...Object.values(files)],
+			delete: ['rm', '-rf', ...Object.values(allFiles)],
 		}, {
 			parent: this,
 			replaceOnChanges: ['create', 'delete'],
 			deleteBeforeReplace: true,
 		});
+
+		this.init = init;
+
+		const files = {
+			apiServerEtcdClientKey: join(pkiPath, 'apiserver-etcd-client.key'),
+			apiServerKubeletClientKey: join(pkiPath, 'apiserver-kubelet-client.key'),
+			apiServerKey: join(pkiPath, 'apiserver.key'),
+			frontProxyClientKey: join(pkiPath, 'front-proxy-client.key'),
+			healthcheckClientKey: join(etcdPkiPath, 'healthcheck-client.key'),
+			peerKey: join(etcdPkiPath, 'peer.key'),
+			serverKey: join(etcdPkiPath, 'server.key'),
+			adminConf: join(k8sDir, 'admin.conf'),
+			controllerManagerConf: join(k8sDir, 'controller-manager.conf'),
+			kubeletConf: join(k8sDir, 'kubelet.conf'),
+			schedulerConf: join(k8sDir, 'scheduler.conf'),
+			superAdminConf: join(k8sDir, 'super-admin.conf'),
+		};
 
 		const cats = Object.entries(files)
 			.map(([key, file]) =>
@@ -116,53 +142,79 @@ export class Certs extends ComponentResource {
 			)
 			.reduce((p, [key, cat]) => ({ [key]: cat.stdout, ...p }), {} as typeof files);
 
-		const apiServerEtcdClient = this.sign('apiServerEtcdClient', etcdCa, cats.apiServerEtcdClientCsr);
-		const apiServerKubeletClient = this.sign('apiServerKubeletClient', etcdCa, cats.apiServerKubeletClientCsr);
-		const apiServer = this.sign('apiServer', etcdCa, cats.apiServerCsr);
-		const frontproxyClient = this.sign('frontproxyClient', etcdCa, cats.frontProxyClientCsr);
-		const healthcheckClient = this.sign('healthcheckClient', etcdCa, cats.healthcheckClientCsr);
-		const peer = this.sign('peer', etcdCa, cats.peerCsr);
-		const server = this.sign('server', etcdCa, cats.serverCsr);
-		const adminConf = this.sign('adminConf', etcdCa, cats.adminConfCsr);
-		const controllerManagerConf = this.sign('controllerManagerConf', etcdCa, cats.controllerManagerConfCsr);
-		const kubeletConf = this.sign('kubeletConf', etcdCa, cats.kubeletConfCsr);
-		const schedulerConf = this.sign('schedulerConf', etcdCa, cats.schedulerConfCsr);
-		const superAdminConf = this.sign('superAdminConf', etcdCa, cats.superAdminConfCsr);
+		const apiServerEtcdClient = this.create('apiserver-etcd-client', etcdCa, pkiPath);
+		const apiServerKubeletClient = this.create('apiserver-kubelet-client', theclusterCa, pkiPath);
+		const apiServer = this.create('apiserver', theclusterCa, pkiPath);
+		const frontProxyClient = this.create('front-proxy-client', theclusterCa, pkiPath);
+		const healthcheckClient = this.create('healthcheck-client', etcdCa, etcdPkiPath);
+		const peer = this.create('peer', etcdCa, etcdPkiPath);
+		const server = this.create('server',etcdCa, etcdPkiPath);
+		const adminConf = this.create('admin.conf', theclusterCa, k8sDir);
+		const controllerManager = this.create('controller-manager.conf', theclusterCa, k8sDir);
+		const kubelet = this.create('kubelet.conf', theclusterCa, k8sDir);
+		const scheduler = this.create('scheduler.conf', theclusterCa, k8sDir);
+		const superAdmin = this.create('super-admin.conf', theclusterCa, k8sDir);
 
-		this.apiServerEtcdClientCsr = cats.apiServerEtcdClientCsr;
+		this.apiServerEtcdClientCsr = apiServerEtcdClient.csr;
 		this.apiServerEtcdClientKey = cats.apiServerEtcdClientKey;
-		this.apiServerKubeletClientCsr = cats.apiServerKubeletClientCsr;
+		this.apiServerKubeletClientCsr = apiServerKubeletClient.csr;
 		this.apiServerKubeletClientKey = cats.apiServerKubeletClientKey;
-		this.apiServerCsr = cats.apiServerCsr;
+		this.apiServerCsr = apiServer.csr;
 		this.apiServerKey = cats.apiServerKey;
-		this.frontProxyClientCsr = cats.frontProxyClientCsr;
+		this.frontProxyClientCsr = frontProxyClient.csr;
 		this.frontProxyClientKey = cats.frontProxyClientKey;
-		this.healthcheckClientCsr = cats.healthcheckClientCsr;
+		this.healthcheckClientCsr = healthcheckClient.csr;
 		this.healthcheckClientKey = cats.healthcheckClientKey;
-		this.peerCsr = cats.peerCsr;
+		this.peerCsr = peer.csr;
 		this.peerKey = cats.peerKey;
-		this.serverCsr = cats.serverCsr;
+		this.serverCsr = server.csr;
 		this.serverKey = cats.serverKey;
 		this.adminConf = cats.adminConf;
-		this.adminConfCsr = cats.adminConfCsr;
+		this.adminConfCsr = adminConf.csr;
 		this.controllerManagerConf = cats.controllerManagerConf;
-		this.controllerManagerConfCsr = cats.controllerManagerConfCsr;
+		this.controllerManagerConfCsr = controllerManager.csr;
 		this.kubeletConf = cats.kubeletConf;
-		this.kubeletConfCsr = cats.kubeletConfCsr;
+		this.kubeletConfCsr = kubelet.csr;
 		this.schedulerConf = cats.schedulerConf;
-		this.schedulerConfCsr = cats.schedulerConfCsr;
+		this.schedulerConfCsr = scheduler.csr;
 		this.superAdminConf = cats.superAdminConf;
-		this.superAdminConfCsr = cats.superAdminConfCsr;
+		this.superAdminConfCsr = superAdmin.csr;
+
+		this.adminConfPath = files.adminConf;
 
 		this.registerOutputs(cats);
+	}
+
+	create(name: string, ca: CaPairArgs, path: Input<string>): Group {
+		const csrFile = join(path, interpolate`${name}.csr`);
+
+		const csrCat = new Cat(name, {
+			args: { files: [csrFile] },
+		}, { parent: this, dependsOn: this.init });
+
+		const csr = csrCat.stdout;
+		const cert = this.sign(name, ca, csr);
+
+		const tee = new Tee(name, {
+			args: {
+				files: [join(path, interpolate`${name}.crt`)],
+				stdin: cert.certPem,
+			},
+		}, { parent: this, dependsOn: cert });
+
+		return { cert, csr };
 	}
 
 	sign(name: string, ca: CaPairArgs, csr: Input<string>): LocallySignedCert {
 		return new LocallySignedCert(name, {
 			allowedUses: [
+				'client_auth',
+				'server_auth',
 				'cert_signing',
 				'crl_signing',
 				'digital_signature',
+				'data_encipherment',
+				'key_encipherment',
 			],
 			caCertPem: ca.certPem,
 			caPrivateKeyPem: ca.privateKeyPem,
