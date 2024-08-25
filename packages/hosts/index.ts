@@ -106,10 +106,6 @@ const kubelet = new Kubelet(name, {
 	containerdSocket: 'unix:///run/containerd/containerd.sock',
 }, { dependsOn: [provisioner, k8sDir] });
 
-// const preflight = new Command('preflight', {
-// 	args: ['kubeadm', 'init', 'phase', 'preflight'],
-// }, { dependsOn: kubeadm });
-
 if (config.role === 'controlplane') {
 	if (!config.vipInterface) {
 		throw new Error('ControlPlane requires a vipInterface');
