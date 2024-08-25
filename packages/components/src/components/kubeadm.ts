@@ -1,13 +1,4 @@
-import {
-	all,
-	asset,
-	ComponentResource,
-	ComponentResourceOptions,
-	Input,
-	interpolate,
-	Output,
-	output,
-} from '@pulumi/pulumi';
+import { all, ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
 import { Chmod, Tee } from '@unmango/baremetal/coreutils';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 import * as YAML from 'yaml';
@@ -21,8 +12,6 @@ interface HostInfo {
 export interface KubeadmArgs {
 	arch: Architecture;
 	certificatesDirectory: Input<string>;
-	caCertPem: Input<string>;
-	caKeyPem: Input<string>;
 	clusterEndpoint: string;
 	hostname: string;
 	hosts: HostInfo[];
@@ -52,20 +41,6 @@ export class Kubeadm extends ComponentResource {
 		const certificatesDirectory = output(args.certificatesDirectory);
 		const hostnames = args.hosts.map(x => x.hostname);
 		const ips = args.hosts.map(x => x.ip);
-
-		const certTee = new Tee('ca-cert', {
-			args: {
-				files: [interpolate`${certificatesDirectory}/ca.crt`],
-				stdin: output(args.caCertPem),
-			},
-		}, { parent: this });
-
-		const keyTee = new Tee('ca-key', {
-			args: {
-				files: [interpolate`${certificatesDirectory}/ca.crt`],
-				stdin: output(args.caCertPem),
-			},
-		}, { parent: this });
 
 		const configPath = interpolate`${args.kubernetesDirectory}/kubeadmcfg.yaml`;
 

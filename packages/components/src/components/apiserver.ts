@@ -1,56 +1,71 @@
 import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
+import { CertRequest, LocallySignedCert, PrivateKey } from '@pulumi/tls';
 import { Command } from '@unmango/baremetal/command';
 import { Mkdir, Tee } from '@unmango/baremetal/coreutils';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 
-export interface EtcdArgs {
+export interface ApiServerArgs {
 	arch: Architecture;
 	caCertPem: Input<string>;
 	caKeyPem: Input<string>;
 	kubeadmcfgPath: Input<string>;
-	certsDirectory: Input<string>;
-	manifestDir: Input<string>;
-	version: Input<string>;
+	pkiPath: Input<string>;
 }
 
-export class Etcd extends ComponentResource {
+export class ApiServer extends ComponentResource {
 	public readonly directory!: Output<string>;
 
-	constructor(name: string, args: EtcdArgs, opts?: ComponentResourceOptions) {
-		super('hosts:index:Etcd', name, args, opts);
+	constructor(name: string, args: ApiServerArgs, opts?: ComponentResourceOptions) {
+		super('hosts:index:ApiServer', name, args, opts);
 		if (opts?.urn) return;
 
-		// const directory = output('/usr/local/bin');
-		const etcdPkiPath = interpolate`${args.certsDirectory}/etcd`;
 		const kubeadmcfgPath = output(args.kubeadmcfgPath);
+		const pkiPath = output(args.pkiPath);
 
-		// const binMkdir = new Mkdir('bin-mkdir', {
+		// const pkiMkdir = new Mkdir('pki-mkdir', {
 		// 	args: {
-		// 		directory: [directory],
+		// 		directory: [pkiPath],
 		// 		parents: true,
 		// 	},
 		// }, { parent: this });
 
-		const pkiMkdir = new Mkdir('pki-mkdir', {
+		// const certTee = new Tee('cert-tee', {
+		// 	args: {
+		// 		files: [interpolate`${pkiPath}/ca.crt`],
+		// 		stdin: args.caCertPem,
+		// 	},
+		// }, { parent: this, dependsOn: pkiMkdir });
+
+		const key = new PrivateKey('apiserver', {
+			algorithm: 'RSA',
+			rsaBits: 4096,
+		}, { parent: this });
+
+		const keyTee = new Tee('key-tee', {
 			args: {
-				directory: [etcdPkiPath],
-				parents: true,
+				files: [interpolate`${pkiPath}/apiserver.key`],
+				stdin: key.privateKeyPem,
 			},
+		}, { parent: this, dependsOn: key });
+
+		const req = new CertRequest('apiserver', {
+			privateKeyPem: key.privateKeyPem,
+		}, { parent: this });
+
+		const cert = new LocallySignedCert('apiserver', {
+			allowedUses: [],
+			caCertPem: args.caCertPem,
+			caPrivateKeyPem: args.caKeyPem,
+			certRequestPem: req.certRequestPem,
+			validityPeriodHours: 2046,
 		}, { parent: this });
 
 		const certTee = new Tee('cert-tee', {
 			args: {
-				files: [interpolate`${etcdPkiPath}/ca.crt`],
-				stdin: args.caCertPem,
+				files: [interpolate`${pkiPath}/apiserver.crt`],
+				stdin: cert.certPem,
 			},
-		}, { parent: this, dependsOn: pkiMkdir });
-
-		const keyTee = new Tee('key-tee', {
-			args: {
-				files: [interpolate`${etcdPkiPath}/ca.key`],
-				stdin: args.caKeyPem,
-			},
-		}, { parent: this, dependsOn: pkiMkdir });
+		}, { parent: this, dependsOn: cert });
 
 		// const certs = this.initAllCerts(kubeadmcfgPath, {
 		// 	dependsOn: [certTee, keyTee],
@@ -83,9 +98,7 @@ export class Etcd extends ComponentResource {
 
 		// this.directory = install.directory;
 
-		this.registerOutputs({
-			directory: this.directory,
-		});
+		this.registerOutputs({});
 	}
 
 	// private initAllCerts(

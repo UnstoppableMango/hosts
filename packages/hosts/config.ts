@@ -1,6 +1,6 @@
 import { Config, StackReference } from '@pulumi/pulumi';
 import { PrivateKey } from '@pulumi/tls';
-import { Arch, Bond, Ethernet, HostNames, Role, Versions, Vlan } from 'components';
+import { Arch, Bond, CaPair, Ethernet, HostNames, Role, Versions, Vlan } from 'components';
 import { z } from 'zod';
 
 const HostInfo = z.object({
@@ -8,13 +8,7 @@ const HostInfo = z.object({
 	ip: z.string(),
 });
 
-const CaPair = z.object({
-	privateKeyPem: z.string(),
-	certPem: z.string(),
-});
-
 export type HostInfo = z.infer<typeof HostInfo>;
-export type CaPair = z.infer<typeof CaPair>;
 
 const config = new Config();
 

@@ -1,4 +1,6 @@
+export * from './apiserver';
 export * from './archiveInstall';
+export * from './certs';
 export * from './cniPlugins';
 export * from './containerd';
 export * from './crictl';
