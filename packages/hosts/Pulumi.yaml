@@ -11,7 +11,7 @@ config:
   baremetal:port: 6969
   versions:
     value:
-      baremetal: 0.0.39
+      baremetal: 0.0.40
       containerd: 1.7.19
       etcd: 3.5.14
       k8s: 1.31.0
