@@ -436,9 +436,7 @@
     "@pulumi/pulumi" "^3.0.0"
 
 "@pulumi/tls@^5.0.2", "@pulumi/tls@^5.0.4":
-  version "5.0.4"
-  resolved "https://registry.yarnpkg.com/@pulumi/tls/-/tls-5.0.4.tgz#aa94e834b9570d50a88f6ee141ce47ae599bf7d6"
-  integrity sha512-9rc0nwclPdtbz9dulKlt5Ki62RXSrTMGjh2OzviMKwP5zAUMmusBX5Y8T/f3z+nhM1XwEexlwi1/j1+UbkO8mw==
+  version "5.0.5"
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
