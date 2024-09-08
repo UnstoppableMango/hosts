@@ -125,43 +125,38 @@ if (config.role === 'controlplane') {
 		create: ['kubeadm', 'init', 'phase', 'preflight', '--config', kubeadm.configurationPath],
 	}, { dependsOn: [kubeadm, certs] });
 
-	const kubeVip = new KubeVip(name, {
-		clusterEndpoint: config.clusterEndpoint,
-		interface: config.vipInterface,
-		kubeconfigPath: certs.adminConfPath,
-		version: config.versions.kubeVip,
+	const etcd = new Etcd(name, {
+		arch: config.arch,
+		version: config.versions.etcd,
+		caCertPem: config.etcdCa.certPem,
+		caKeyPem: config.etcdCa.privateKeyPem,
 		manifestDir: kubelet.manifestDir,
-	}, { dependsOn: [k8sDir] });
+		certsDirectory: pkiDir.path,
+		kubeadmcfgPath: kubeadm.configurationPath,
+	}, { dependsOn: [certs, kubelet, kubeadm] });
 
-	const etcd = new Command('init-phase-etcd', {
-		create: ['kubeadm', 'init', 'phase', 'etcd'],
-	}, { dependsOn: [kubeadm, preflight] });
-	kubeadmPhases.push(etcd);
-
-	const controlPlane = new Command('init-phase-control-plane', {
-		create: ['kubeadm', 'init', 'phase', 'control-plane'],
-	}, { dependsOn: [kubeadm, preflight] });
-	kubeadmPhases.push(controlPlane);
-
-	const kubeletStart = new Command('init-phase-kubelet-start', {
-		create: ['kubeadm', 'init', 'phase', 'kubelet-start', '--config', kubeadm.configurationPath],
-	}, { dependsOn: [kubeadm, kubeVip, etcd, controlPlane] });
-	kubeadmPhases.push(kubeletStart);
-
-	const uploadConfig = new Command('init-phase-upload-config', {
-		create: ['kubeadm', 'init', 'phase', 'upload-config'],
-	}, { dependsOn: [kubeadm, kubeletStart] });
-	kubeadmPhases.push(uploadConfig);
-
-	// const etcd = new Etcd(name, {
-	// 	arch: config.arch,
-	// 	version: config.versions.etcd,
-	// 	caCertPem: config.etcdCa.certPem,
-	// 	caKeyPem: config.etcdCa.privateKeyPem,
+	// const kubeVip = new KubeVip(name, {
+	// 	clusterEndpoint: config.clusterEndpoint,
+	// 	interface: config.vipInterface,
+	// 	kubeconfigPath: certs.adminConfPath,
+	// 	version: config.versions.kubeVip,
 	// 	manifestDir: kubelet.manifestDir,
-	// 	certsDirectory: pkiDir.path,
-	// 	kubeadmcfgPath: kubeadm.configurationPath,
-	// }, { dependsOn: [certs, kubelet, kubeadm] });
+	// }, { dependsOn: [k8sDir, etcd] });
+
+	// const controlPlane = new Command('init-phase-control-plane', {
+	// 	create: ['kubeadm', 'init', 'phase', 'control-plane'],
+	// }, { dependsOn: [kubeadm, preflight] });
+	// kubeadmPhases.push(controlPlane);
+
+	// const kubeletStart = new Command('init-phase-kubelet-start', {
+	// 	create: ['kubeadm', 'init', 'phase', 'kubelet-start', '--config', kubeadm.configurationPath],
+	// }, { dependsOn: [kubeadm, kubeVip, etcd, controlPlane] });
+	// kubeadmPhases.push(kubeletStart);
+
+	// const uploadConfig = new Command('init-phase-upload-config', {
+	// 	create: ['kubeadm', 'init', 'phase', 'upload-config'],
+	// }, { dependsOn: [kubeadm, kubeletStart] });
+	// kubeadmPhases.push(uploadConfig);
 
 	// 	const init = runner.run(remote.Command, 'kubeadm-init', {
 	// 		create: pulumi.all([

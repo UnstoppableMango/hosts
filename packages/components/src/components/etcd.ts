@@ -23,6 +23,7 @@ export class Etcd extends ComponentResource {
 		// const directory = output('/usr/local/bin');
 		const etcdPkiPath = interpolate`${args.certsDirectory}/etcd`;
 		const kubeadmcfgPath = output(args.kubeadmcfgPath);
+		const manifestDir = output(args.manifestDir);
 
 		// const binMkdir = new Mkdir('bin-mkdir', {
 		// 	args: {
@@ -51,6 +52,11 @@ export class Etcd extends ComponentResource {
 				stdin: args.caKeyPem,
 			},
 		}, { parent: this, dependsOn: pkiMkdir });
+
+		const etcd = new Command('init-phase-etcd', {
+			create: ['kubeadm', 'init', 'phase', 'etcd', 'local', '--config', kubeadmcfgPath],
+			delete: ['rm', '-f', interpolate`${manifestDir}/etcd.yaml`],
+		}, { parent: this, dependsOn: [certTee, keyTee] });
 
 		// const certs = this.initAllCerts(kubeadmcfgPath, {
 		// 	dependsOn: [certTee, keyTee],
