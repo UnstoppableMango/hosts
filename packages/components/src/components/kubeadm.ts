@@ -138,11 +138,12 @@ function clusterConfiguration(
 				extraArgs: [
 					{ name: 'name', value: hostname },
 					{
-						name: 'initial-cluster', value: [
+						name: 'initial-cluster',
+						value: [
 							`${names[0]}=https://${hosts[0]}:2380`,
 							`${names[1]}=https://${hosts[1]}:2380`,
 							`${names[2]}=https://${hosts[2]}:2380`,
-						].join(',')
+						].join(','),
 					},
 					{ name: 'initial-cluster-state', value: 'new' },
 					{ name: 'listen-peer-urls', value: `https://${ip}:2380` },

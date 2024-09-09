@@ -2,7 +2,6 @@ import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
 import { Command } from '@unmango/baremetal';
 import {
-	ApiServer,
 	Certs,
 	CniPlugins,
 	Crictl,
@@ -23,45 +22,18 @@ const runner = new Runner({
 	privateKey: config.loginKey,
 });
 
+const installScriptUrl = pulumi
+	.interpolate`https://github.com/unmango/pulumi-baremetal/releases/download/v${config.versions.baremetal}/install.sh`;
+
 const provisioner = runner.run(remote.Command, 'provisioner', {
 	environment: {
 		PULUMI_COMMAND_IREADTHEDOCS: 'true',
 		PULUMI_COMMAND_LISTEN_ADDRESS: config.provisionerAddress,
 	},
-	create: pulumi
-		.interpolate`curl -L https://github.com/unmango/pulumi-baremetal/releases/download/v${config.versions.baremetal}/install.sh | bash`,
+	create: pulumi.interpolate`curl -L ${installScriptUrl} | bash`,
 });
 
 export const provisionerInstallLogs = provisioner.stdout;
-
-// let networks: Network = {
-// 	ethernets: config.ethernets,
-// 	bonds: config.bonds,
-// 	vlans: config.vlans,
-// };
-
-// let bondingMod: remote.CopyToRemote | undefined;
-// let modprobe: remote.Command | undefined;
-
-// if (networks.bonds) {
-// 	bondingMod = runner.run(remote.CopyToRemote, 'systemd-bonding', {
-// 		remotePath: '/etc/modules-load.d/bonding.conf',
-// 		source: new pulumi.asset.StringAsset('bonding'),
-// 	});
-
-// 	modprobe = runner.run(remote.Command, 'bonding-modprobe', {
-// 		create: 'modprobe bonding',
-// 		delete: 'modprobe -r bonding',
-// 	}, { dependsOn: bondingMod });
-// }
-
-// const netplan = runner.run(Netplan, name, {
-// 	config: networks,
-// 	name: 'thecluster',
-// 	priority: 69,
-// }, { dependsOn: modprobe });
-
-// const ipv4Forwarding = runner.run(Ipv4PacketForwarding, name, {});
 
 const k8sDir = new Directory('kubernetes-config', {
 	path: config.kubernetesDirectory,
@@ -105,8 +77,6 @@ const kubelet = new Kubelet(name, {
 	kubeconfig: '/etc/kubernetes/kubelet.conf', // kubeadm generate-csr will create this
 	containerdSocket: 'unix:///run/containerd/containerd.sock',
 }, { dependsOn: [provisioner, k8sDir] });
-
-const kubeadmPhases: Command[] = [];
 
 if (config.role === 'controlplane') {
 	if (!config.vipInterface) {
