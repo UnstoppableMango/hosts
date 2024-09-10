@@ -53,10 +53,10 @@ export class Etcd extends ComponentResource {
 			},
 		}, { parent: this, dependsOn: pkiMkdir });
 
-		const etcd = new Command('init-phase-etcd', {
-			create: ['kubeadm', 'init', 'phase', 'etcd', 'local', '--config', kubeadmcfgPath],
-			delete: ['rm', '-f', interpolate`${manifestDir}/etcd.yaml`],
-		}, { parent: this, dependsOn: [certTee, keyTee] });
+		// const etcd = new Command('init-phase-etcd', {
+		// 	create: ['kubeadm', 'init', 'phase', 'etcd', 'local', '--config', kubeadmcfgPath],
+		// 	delete: ['rm', '-f', interpolate`${manifestDir}/etcd.yaml`],
+		// }, { parent: this, dependsOn: [certTee, keyTee] });
 
 		// const certs = this.initAllCerts(kubeadmcfgPath, {
 		// 	dependsOn: [certTee, keyTee],
