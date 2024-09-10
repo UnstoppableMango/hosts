@@ -95,15 +95,15 @@ if (config.role === 'controlplane') {
 		create: ['kubeadm', 'init', 'phase', 'preflight', '--config', kubeadm.configurationPath],
 	}, { dependsOn: [kubeadm, certs] });
 
-	const etcd = new Etcd(name, {
-		arch: config.arch,
-		version: config.versions.etcd,
-		caCertPem: config.etcdCa.certPem,
-		caKeyPem: config.etcdCa.privateKeyPem,
-		manifestDir: kubelet.manifestDir,
-		certsDirectory: pkiDir.path,
-		kubeadmcfgPath: kubeadm.configurationPath,
-	}, { dependsOn: [certs, kubelet, kubeadm] });
+	// const etcd = new Etcd(name, {
+	// 	arch: config.arch,
+	// 	version: config.versions.etcd,
+	// 	caCertPem: config.etcdCa.certPem,
+	// 	caKeyPem: config.etcdCa.privateKeyPem,
+	// 	manifestDir: kubelet.manifestDir,
+	// 	certsDirectory: pkiDir.path,
+	// 	kubeadmcfgPath: kubeadm.configurationPath,
+	// }, { dependsOn: [certs, kubelet, kubeadm] });
 
 	// const kubeVip = new KubeVip(name, {
 	// 	clusterEndpoint: config.clusterEndpoint,
