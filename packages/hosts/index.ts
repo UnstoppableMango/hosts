@@ -1,19 +1,7 @@
 import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
 import { Command } from '@unmango/baremetal';
-import {
-	ApiServer,
-	Certs,
-	CniPlugins,
-	Crictl,
-	Directory,
-	Etcd,
-	Kubeadm,
-	Kubectl,
-	Kubelet,
-	KubeVip,
-	Runner,
-} from 'components';
+import { Certs, CniPlugins, Crictl, Directory, Etcd, Kubeadm, Kubectl, Kubelet, KubeVip, Runner } from 'components';
 import * as config from './config';
 
 const name = config.hostname;
@@ -23,45 +11,18 @@ const runner = new Runner({
 	privateKey: config.loginKey,
 });
 
+const installScriptUrl = pulumi
+	.interpolate`https://github.com/unmango/pulumi-baremetal/releases/download/v${config.versions.baremetal}/install.sh`;
+
 const provisioner = runner.run(remote.Command, 'provisioner', {
 	environment: {
 		PULUMI_COMMAND_IREADTHEDOCS: 'true',
 		PULUMI_COMMAND_LISTEN_ADDRESS: config.provisionerAddress,
 	},
-	create: pulumi
-		.interpolate`curl -L https://github.com/unmango/pulumi-baremetal/releases/download/v${config.versions.baremetal}/install.sh | bash`,
+	create: pulumi.interpolate`curl -L ${installScriptUrl} | bash`,
 });
 
 export const provisionerInstallLogs = provisioner.stdout;
-
-// let networks: Network = {
-// 	ethernets: config.ethernets,
-// 	bonds: config.bonds,
-// 	vlans: config.vlans,
-// };
-
-// let bondingMod: remote.CopyToRemote | undefined;
-// let modprobe: remote.Command | undefined;
-
-// if (networks.bonds) {
-// 	bondingMod = runner.run(remote.CopyToRemote, 'systemd-bonding', {
-// 		remotePath: '/etc/modules-load.d/bonding.conf',
-// 		source: new pulumi.asset.StringAsset('bonding'),
-// 	});
-
-// 	modprobe = runner.run(remote.Command, 'bonding-modprobe', {
-// 		create: 'modprobe bonding',
-// 		delete: 'modprobe -r bonding',
-// 	}, { dependsOn: bondingMod });
-// }
-
-// const netplan = runner.run(Netplan, name, {
-// 	config: networks,
-// 	name: 'thecluster',
-// 	priority: 69,
-// }, { dependsOn: modprobe });
-
-// const ipv4Forwarding = runner.run(Ipv4PacketForwarding, name, {});
 
 const k8sDir = new Directory('kubernetes-config', {
 	path: config.kubernetesDirectory,
@@ -123,31 +84,38 @@ if (config.role === 'controlplane') {
 		create: ['kubeadm', 'init', 'phase', 'preflight', '--config', kubeadm.configurationPath],
 	}, { dependsOn: [kubeadm, certs] });
 
-	const kubeVip = new KubeVip(name, {
-		clusterEndpoint: config.clusterEndpoint,
-		interface: config.vipInterface,
-		kubeconfigPath: certs.adminConfPath,
-		version: config.versions.kubeVip,
+	const etcd = new Etcd(name, {
+		arch: config.arch,
+		version: config.versions.etcd,
+		caCertPem: config.etcdCa.certPem,
+		caKeyPem: config.etcdCa.privateKeyPem,
 		manifestDir: kubelet.manifestDir,
-	}, { dependsOn: [k8sDir] });
+		certsDirectory: pkiDir.path,
+		kubeadmcfgPath: kubeadm.configurationPath,
+	}, { dependsOn: [certs, kubelet, kubeadm] });
 
-	// const apiserver = new ApiServer(name, {
-	// 	arch: config.arch,
-	// 	kubeadmcfgPath: kubeadm.configurationPath,
-	// 	caCertPem: config.etcdCa.certPem,
-	// 	caKeyPem: config.etcdCa.privateKeyPem,
-	// 	pkiPath: pkiDir.path,
-	// }, { dependsOn: kubeadm });
-
-	// const etcd = new Etcd(name, {
-	// 	arch: config.arch,
-	// 	version: config.versions.etcd,
-	// 	caCertPem: config.etcdCa.certPem,
-	// 	caKeyPem: config.etcdCa.privateKeyPem,
+	// const kubeVip = new KubeVip(name, {
+	// 	clusterEndpoint: config.clusterEndpoint,
+	// 	interface: config.vipInterface,
+	// 	kubeconfigPath: certs.adminConfPath,
+	// 	version: config.versions.kubeVip,
 	// 	manifestDir: kubelet.manifestDir,
-	// 	certsDirectory: pkiDir.path,
-	// 	kubeadmcfgPath: kubeadm.configurationPath,
-	// }, { dependsOn: [certs, kubelet, kubeadm] });
+	// }, { dependsOn: [k8sDir, etcd] });
+
+	// const controlPlane = new Command('init-phase-control-plane', {
+	// 	create: ['kubeadm', 'init', 'phase', 'control-plane'],
+	// }, { dependsOn: [kubeadm, preflight] });
+	// kubeadmPhases.push(controlPlane);
+
+	// const kubeletStart = new Command('init-phase-kubelet-start', {
+	// 	create: ['kubeadm', 'init', 'phase', 'kubelet-start', '--config', kubeadm.configurationPath],
+	// }, { dependsOn: [kubeadm, kubeVip, etcd, controlPlane] });
+	// kubeadmPhases.push(kubeletStart);
+
+	// const uploadConfig = new Command('init-phase-upload-config', {
+	// 	create: ['kubeadm', 'init', 'phase', 'upload-config'],
+	// }, { dependsOn: [kubeadm, kubeletStart] });
+	// kubeadmPhases.push(uploadConfig);
 
 	// 	const init = runner.run(remote.Command, 'kubeadm-init', {
 	// 		create: pulumi.all([

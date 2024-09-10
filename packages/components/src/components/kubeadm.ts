@@ -98,7 +98,7 @@ function initConfiguration(
 	taints: string[] = [],
 ): string {
 	return YAML.stringify({
-		apiVersion: 'kubeadm.k8s.io/v1beta3',
+		apiVersion: 'kubeadm.k8s.io/v1beta4',
 		kind: 'InitConfiguration',
 		nodeRegistration: {
 			name: nodeName,
@@ -121,7 +121,7 @@ function clusterConfiguration(
 	version: string,
 ): string {
 	return YAML.stringify({
-		apiVersion: 'kubeadm.k8s.io/v1beta3',
+		apiVersion: 'kubeadm.k8s.io/v1beta4',
 		kind: 'ClusterConfiguration',
 		kubernetesVersion: version,
 		clusterName: 'thecluster',
@@ -135,19 +135,22 @@ function clusterConfiguration(
 			local: {
 				serverCertSANs: [ip],
 				peerCertSANs: [ip],
-				extraArgs: {
-					name: hostname,
-					'initial-cluster': [
-						`${names[0]}=https://${hosts[0]}:2380`,
-						`${names[1]}=https://${hosts[1]}:2380`,
-						`${names[2]}=https://${hosts[2]}:2380`,
-					].join(','),
-					'initial-cluster-state': 'new',
-					'listen-peer-urls': `https://${ip}:2380`,
-					'listen-client-urls': `https://${ip}:2379`,
-					'advertise-client-urls': `https://${ip}:2379`,
-					'initial-advertise-peer-urls': `https://${ip}:2380`,
-				},
+				extraArgs: [
+					{ name: 'name', value: hostname },
+					{
+						name: 'initial-cluster',
+						value: [
+							`${names[0]}=https://${hosts[0]}:2380`,
+							`${names[1]}=https://${hosts[1]}:2380`,
+							`${names[2]}=https://${hosts[2]}:2380`,
+						].join(','),
+					},
+					{ name: 'initial-cluster-state', value: 'new' },
+					{ name: 'listen-peer-urls', value: `https://${ip}:2380` },
+					{ name: 'listen-client-urls', value: `https://${ip}:2379` },
+					{ name: 'advertise-client-urls', value: `https://${ip}:2379` },
+					{ name: 'initial-advertise-peer-urls', value: `https://${ip}:2380` },
+				],
 			},
 		},
 	});

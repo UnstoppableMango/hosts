@@ -68,6 +68,13 @@ export class Certs extends ComponentResource {
 		const etcdPkiPath = join(pkiPath, 'etcd');
 		const k8sDir = output(args.k8sDir);
 
+		const ca = new Tee('ca', {
+			args: {
+				files: [join(pkiPath, 'ca.crt')],
+				stdin: theclusterCa.certPem,
+			},
+		}, { parent: this });
+
 		const allFiles = {
 			apiServerEtcdClientCsr: join(pkiPath, 'apiserver-etcd-client.csr'),
 			apiServerEtcdClientKey: join(pkiPath, 'apiserver-etcd-client.key'),
