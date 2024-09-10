@@ -49,9 +49,6 @@ export class Kubelet extends ComponentResource {
 			binName,
 		}, { parent: this });
 
-		// const configDir = interpolate`${k8sDir}/kubelet.conf.d`;
-		// const configMkdir = this.mkdir('config-mkdir', configDir);
-
 		const manifestDir = interpolate`${k8sDir}/manifests`;
 		const manifestsMkdir = new Mkdir('manifests', {
 			args: {
@@ -68,9 +65,7 @@ export class Kubelet extends ComponentResource {
 			path: interpolate`${systemdDirectory}/kubelet.service.d`,
 		}, { parent: this });
 
-		// I think kubeadm puts the kubeconfig here
-		// const configPath = interpolate`${k8sDir}/kubelet.conf`;
-		const configPath = interpolate`${configDir.path}/kubelet.conf`;
+		const configPath = interpolate`${varLib.path}/kubelet.conf`;
 		const config = new Tee('config-tee', {
 			args: {
 				files: [configPath],
