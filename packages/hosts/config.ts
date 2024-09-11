@@ -40,6 +40,9 @@ export const workers = requireZod(z.array(HostInfo), 'workers');
 
 export const hosts = [...controlplanes, ...workers];
 
+const bootstrapHost = hosts.find(x => x.hostname === bootstrapNode);
+export const bootstrapIp = bootstrapHost?.ip ?? clusterEndpoint;
+
 export const provisionerAddress = ((c: Config): string => {
 	return `${c.require('address')}:${c.require('port')}`;
 })(new Config('baremetal'));
@@ -57,3 +60,5 @@ export const etcdCa = pkiRef.requireOutput('etcd')
 
 export const theclusterCa = pkiRef.requireOutput('thecluster')
 	.apply(x => x as CaPair);
+
+export const k3sToken = pkiRef.requireOutput('k3sToken').apply(String);

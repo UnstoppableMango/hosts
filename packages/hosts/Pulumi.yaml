@@ -22,6 +22,7 @@ config:
       cniPlugins: 1.5.1
       krel: 0.16.2
       kubeVip: 0.8.1
+      k3s: v1.31.0+k3s1
   bootstrapNode: pik8s4
   clusterEndpoint: 192.168.1.100
   kubernetesDirectory: /etc/kubernetes

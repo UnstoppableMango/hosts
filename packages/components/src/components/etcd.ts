@@ -1,5 +1,4 @@
 import { ComponentResource, ComponentResourceOptions, Input, interpolate, Output, output } from '@pulumi/pulumi';
-import { Command } from '@unmango/baremetal/command';
 import { Mkdir, Tee } from '@unmango/baremetal/coreutils';
 import { Architecture } from '@unmango/pulumi-kubernetes-the-hard-way/remote';
 
@@ -15,107 +14,47 @@ export interface EtcdArgs {
 
 export class Etcd extends ComponentResource {
 	public readonly directory!: Output<string>;
+	public readonly caPath!: Output<string>;
+	public readonly keyPath!: Output<string>;
 
 	constructor(name: string, args: EtcdArgs, opts?: ComponentResourceOptions) {
 		super('hosts:index:Etcd', name, args, opts);
 		if (opts?.urn) return;
 
-		// const directory = output('/usr/local/bin');
-		const etcdPkiPath = interpolate`${args.certsDirectory}/etcd`;
+		const pkiPath = interpolate`${args.certsDirectory}/etcd`;
+		const caPath = interpolate`${pkiPath}/ca.crt`;
+		const keyPath = interpolate`${pkiPath}/ca.key`;
 		const kubeadmcfgPath = output(args.kubeadmcfgPath);
 		const manifestDir = output(args.manifestDir);
 
-		// const binMkdir = new Mkdir('bin-mkdir', {
-		// 	args: {
-		// 		directory: [directory],
-		// 		parents: true,
-		// 	},
-		// }, { parent: this });
-
 		const pkiMkdir = new Mkdir('pki-mkdir', {
 			args: {
-				directory: [etcdPkiPath],
+				directory: [pkiPath],
 				parents: true,
 			},
 		}, { parent: this });
 
 		const certTee = new Tee('cert-tee', {
 			args: {
-				files: [interpolate`${etcdPkiPath}/ca.crt`],
+				files: [caPath],
 				stdin: args.caCertPem,
 			},
 		}, { parent: this, dependsOn: pkiMkdir });
 
 		const keyTee = new Tee('key-tee', {
 			args: {
-				files: [interpolate`${etcdPkiPath}/ca.key`],
+				files: [keyPath],
 				stdin: args.caKeyPem,
 			},
 		}, { parent: this, dependsOn: pkiMkdir });
 
-		// const etcd = new Command('init-phase-etcd', {
-		// 	create: ['kubeadm', 'init', 'phase', 'etcd', 'local', '--config', kubeadmcfgPath],
-		// 	delete: ['rm', '-f', interpolate`${manifestDir}/etcd.yaml`],
-		// }, { parent: this, dependsOn: [certTee, keyTee] });
-
-		// const certs = this.initAllCerts(kubeadmcfgPath, {
-		// 	dependsOn: [certTee, keyTee],
-		// });
-
-		// const removeCerts = this.cmd('clean-up-certs', {
-		// 	delete: all([pkiPath, etcdPkiPath]).apply(([p, e]) =>
-		// 		[
-		// 			'rm -f',
-		// 			`${p}/apiserver-etcd-client.crt`,
-		// 			`${p}/apiserver-etcd-client.key`,
-		// 			`${e}/healthcheck-client.crt`,
-		// 			`${e}/healthcheck-client.key`,
-		// 			`${e}/peer.crt`,
-		// 			`${e}/peer.key`,
-		// 			`${e}/server.crt`,
-		// 			`${e}/server.key`,
-		// 		].join(' ')
-		// 	),
-		// }, { dependsOn: certs });
-
-		// const local = this.cmd('etcd-local', {
-		// 	create: kubeadmcfgPath.apply(Etcd.initPhaseLocal),
-		// 	delete: interpolate`rm -f ${manifestDir}/etcd.yaml`,
-		// }, { dependsOn: certs, deleteBeforeReplace: true });
-
-		// const varLib = this.exec(Directory, 'var-lib-etcd', {
-		// 	path: '/var/lib/etcd',
-		// });
-
-		// this.directory = install.directory;
+		this.caPath = caPath;
+		this.keyPath = keyPath;
 
 		this.registerOutputs({
 			directory: this.directory,
+			caPath: this.caPath,
+			keyPath: this.keyPath,
 		});
 	}
-
-	// private initAllCerts(
-	// 	configPath: Input<string>,
-	// 	opts?: CustomResourceOptions,
-	// ): Resource[] {
-	// 	return [
-	// 		'etcd-server',
-	// 		'etcd-peer',
-	// 		'etcd-healthcheck-client',
-	// 		'apiserver-etcd-client',
-	// 	].map(phase => {
-	// 		return this.cmd(`${phase}-certs`, {
-	// 			create: output(configPath).apply(x => Etcd.initPhaseCerts(phase, x)),
-	// 			delete: '',
-	// 		}, opts);
-	// 	});
-	// }
-
-	// private static initPhaseCerts(phase: string, config: string): string {
-	// 	return `kubeadm init phase certs ${phase} --config=${config}`;
-	// }
-
-	// private static initPhaseLocal(config: string): string {
-	// 	return `kubeadm init phase etcd local --config=${config}`;
-	// }
 }

@@ -58,6 +58,7 @@ export const Versions = z.object({
 	krel: z.string(),
 	kubeVip: z.string(),
 	runc: z.string(),
+	k3s: z.string(),
 });
 
 export type Arch = z.infer<typeof Arch>;
