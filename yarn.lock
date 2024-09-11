@@ -439,6 +439,13 @@
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
+"@pulumi/random@^4.16.4":
+  version "4.16.4"
+  resolved "https://registry.yarnpkg.com/@pulumi/random/-/random-4.16.4.tgz#dc996f400a2635e6fc0fa8cf10675a5ef4d81fc0"
+  integrity sha512-yBe7bDo74NcZJDX16QlIW+lWa2ZthJ7TLMu7UtIG2nd46LUwe9aC4kDogQKa7oWvQMO0aau8x2Y6nFZCZDnvVQ==
+  dependencies:
+    "@pulumi/pulumi" "^3.0.0"
+
 "@pulumi/tls@^5.0.2", "@pulumi/tls@^5.0.4":
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/@pulumi/tls/-/tls-5.0.4.tgz#aa94e834b9570d50a88f6ee141ce47ae599bf7d6"

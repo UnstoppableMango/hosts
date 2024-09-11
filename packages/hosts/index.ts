@@ -1,6 +1,8 @@
 import { remote } from '@pulumi/command';
 import * as pulumi from '@pulumi/pulumi';
+import * as random from '@pulumi/random';
 import { Command } from '@unmango/baremetal';
+import { Cat, Mkdir, Tee, Wget } from '@unmango/baremetal/coreutils';
 import { Certs, CniPlugins, Crictl, Directory, Etcd, Kubeadm, Kubectl, Kubelet, KubeVip, Runner } from 'components';
 import * as config from './config';
 
@@ -52,47 +54,55 @@ const crictl = new Crictl(name, {
 	version: config.versions.crictl,
 }, { dependsOn: [provisioner] });
 
-const cniPlugins = new CniPlugins(name, {
-	arch: config.arch,
-	version: config.versions.cniPlugins,
-}, { dependsOn: provisioner });
+// const cniPlugins = new CniPlugins(name, {
+// 	arch: config.arch,
+// 	version: config.versions.cniPlugins,
+// }, { dependsOn: provisioner });
 
-const kubelet = new Kubelet(name, {
-	arch: config.arch,
-	version: config.versions.k8s,
-	kubernetesDirectory: k8sDir.path,
-	systemdDirectory: config.systemdDirectory,
-	bootstrapKubeconfig: '/etc/kubernetes/bootstrap-kubelet.conf', // Hoping to remove this if possible
-	kubeconfig: '/etc/kubernetes/kubelet.conf', // kubeadm generate-csr will create this
-	containerdSocket: 'unix:///run/containerd/containerd.sock',
-}, { dependsOn: [provisioner, k8sDir] });
+// const kubelet = new Kubelet(name, {
+// 	arch: config.arch,
+// 	version: config.versions.k8s,
+// 	kubernetesDirectory: k8sDir.path,
+// 	systemdDirectory: config.systemdDirectory,
+// 	bootstrapKubeconfig: '/etc/kubernetes/bootstrap-kubelet.conf', // Hoping to remove this if possible
+// 	kubeconfig: '/etc/kubernetes/kubelet.conf', // kubeadm generate-csr will create this
+// 	containerdSocket: 'unix:///run/containerd/containerd.sock',
+// }, { dependsOn: [provisioner, k8sDir] });
+
+let etcd: Etcd | null = null;
 
 if (config.role === 'controlplane') {
 	if (!config.vipInterface) {
 		throw new Error('ControlPlane requires a vipInterface');
 	}
 
-	const certs = new Certs(name, {
-		etcdCa: config.etcdCa,
-		theclusterCa: config.theclusterCa,
-		k8sDir: k8sDir.path,
-		kubeadmcfgPath: kubeadm.configurationPath,
-		pkiPath: pkiDir.path,
-	}, { dependsOn: kubeadm });
+	// const certs = new Certs(name, {
+	// 	etcdCa: config.etcdCa,
+	// 	theclusterCa: config.theclusterCa,
+	// 	k8sDir: k8sDir.path,
+	// 	kubeadmcfgPath: kubeadm.configurationPath,
+	// 	pkiPath: pkiDir.path,
+	// }, { dependsOn: kubeadm });
 
-	const preflight = new Command('init-phase-preflight', {
-		create: ['kubeadm', 'init', 'phase', 'preflight', '--config', kubeadm.configurationPath],
-	}, { dependsOn: [kubeadm, certs] });
+	// const preflight = new Command('init-phase-preflight', {
+	// 	create: ['kubeadm', 'init', 'phase', 'preflight', '--config', kubeadm.configurationPath],
+	// }, { dependsOn: [kubeadm, certs] });
 
-	const etcd = new Etcd(name, {
-		arch: config.arch,
-		version: config.versions.etcd,
-		caCertPem: config.etcdCa.certPem,
-		caKeyPem: config.etcdCa.privateKeyPem,
-		manifestDir: kubelet.manifestDir,
-		certsDirectory: pkiDir.path,
-		kubeadmcfgPath: kubeadm.configurationPath,
-	}, { dependsOn: [certs, kubelet, kubeadm] });
+	// etcd = new Etcd(name, {
+	// 	arch: config.arch,
+	// 	version: config.versions.etcd,
+	// 	caCertPem: config.etcdCa.certPem,
+	// 	caKeyPem: config.etcdCa.privateKeyPem,
+	// 	// manifestDir: kubelet.manifestDir,
+	// 	manifestDir: '',
+	// 	certsDirectory: pkiDir.path,
+	// 	kubeadmcfgPath: kubeadm.configurationPath,
+	// }, {
+	// 	dependsOn: [
+	// 		// kubelet,
+	// 		kubeadm,
+	// 	],
+	// });
 
 	// const kubeVip = new KubeVip(name, {
 	// 	clusterEndpoint: config.clusterEndpoint,
@@ -144,9 +154,106 @@ if (config.role === 'controlplane') {
 	// 	});
 }
 
-// if (config.role === 'worker') {
-// 	runner.run(CniPlugins, name, {
-// 		arch: config.arch,
-// 		version: config.versions.cniPlugins,
-// 	});
-// }
+const acceptK3sEnv = new Tee('k3s-acceptEnv', {
+	args: {
+		files: ['/etc/ssh/sshd_config.d/10-install-k3s.conf'],
+		stdin: pulumi.interpolate`# Managed by pulumi
+AcceptEnv INSTALL_K3S_*
+AcceptEnv K3S_*
+`,
+	},
+}, { dependsOn: provisioner });
+
+const k3sManifests = new Mkdir('manifests', {
+	args: {
+		directory: ['/var/lib/rancher/k3s/server/manifests'],
+		parents: true,
+	},
+}, { dependsOn: provisioner });
+
+const kubeVip: pulumi.Resource[] = [];
+
+if (config.bootstrapNode === name) {
+	const kubeVipRbac = new Wget('kube-vip-rbac', {
+		args: {
+			urls: ['https://kube-vip.io/manifests/rbac.yaml'],
+			outputDocument: pulumi.interpolate`${k3sManifests.args.directory[0]}/kube-vip-rbac.yaml`,
+		},
+	}, { dependsOn: provisioner });
+
+	const kubeVipDaemonset = new Tee('kube-vip-daemonset', {
+		args: {
+			files: [pulumi.interpolate`${k3sManifests.args.directory[0]}/kube-vip.yaml`],
+			stdin: KubeVip.daemonSet(),
+		},
+	}, { dependsOn: [provisioner, k3sManifests] });
+
+	kubeVip.push(kubeVipRbac, kubeVipDaemonset);
+}
+
+const adminKubeconfigPath = '/etc/kubernetes/k3s-admin.kubeconfig';
+
+// https://docs.k3s.io/reference/env-variables
+const k3sInstallEnv: Record<string, pulumi.Input<string>> = {
+	INSTALL_K3S_SYMLINK: 'skip',
+	INSTALL_K3S_VERSION: config.versions.k3s,
+	INSTALL_K3S_BIN_DIR: '/usr/local/bin',
+	INSTALL_K3S_SYSTEMD_DIR: config.systemdDirectory,
+	K3S_KUBECONFIG_OUTPUT: adminKubeconfigPath,
+};
+
+if (etcd) {
+	// k3sInstallEnv.K3S_DATASTORE_ENDPOINT = 'etcd';
+	// k3sInstallEnv.K3S_DATASTORE_CAFILE = etcd.caPath;
+}
+
+const k3sArgs: pulumi.Input<string>[] = [
+	config.role === 'controlplane' ? 'server' : 'agent',
+];
+
+if (config.bootstrapNode === name) {
+	k3sInstallEnv.K3S_CLUSTER_INIT = 'true';
+	k3sInstallEnv.K3S_TOKEN = config.k3sToken;
+} else if (config.role === 'controlplane') {
+	k3sInstallEnv.K3S_TOKEN = config.k3sToken;
+	k3sInstallEnv.K3S_URL = `https://${config.clusterEndpoint}:6443`;
+} else {
+	k3sInstallEnv.K3S_TOKEN = config.k3sToken;
+	k3sInstallEnv.K3S_URL = `https://${config.clusterEndpoint}:6443`;
+}
+
+if (config.role === 'controlplane') {
+	k3sArgs.push(
+		`--tls-san=${config.bootstrapIp}`,
+		`--tls-san=${config.clusterEndpoint}`,
+		`--disable-network-policy`,
+		`--disable-helm-controller`,
+		`--disable-cloud-controller`,
+		`--disable=traefik`,
+		`--disable=metrics-server`,
+		`--disable=servicelb`,
+	);
+} else {
+	// k3sArgs.push('agent');
+}
+
+const k3sArgsString = pulumi.all(k3sArgs).apply((x) => x.join(' '));
+const k3sInstall = runner.run(remote.Command, 'k3s-install', {
+	environment: k3sInstallEnv,
+	create: pulumi.interpolate`curl -sfL https://get.k3s.io | sh -s - ${k3sArgsString}`,
+	// https://docs.k3s.io/installation/uninstall
+	delete: config.role === 'controlplane' ? '/usr/local/bin/k3s-uninstall.sh' : '/usr/local/bin/k3s-agent-uninstall.sh',
+}, { dependsOn: [provisioner, k3sManifests, acceptK3sEnv, kubectl, crictl, ...kubeVip] });
+
+export const k3sInstallLogs = k3sInstall.stdout;
+
+let adminConfig: Cat | null = null;
+if (config.role === 'controlplane') {
+	adminConfig = new Cat('admin-config', {
+		args: {
+			files: [adminKubeconfigPath],
+		},
+	}, { dependsOn: k3sInstall, additionalSecretOutputs: ['stdout'] });
+}
+
+export const kubeconfig = adminConfig?.stdout;
