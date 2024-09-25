@@ -436,7 +436,7 @@
     "@pulumi/pulumi" "^3.0.0"
 
 "@pulumi/tls@^5.0.2", "@pulumi/tls@^5.0.4":
-  version "5.0.6"
+  version "5.0.7"
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
