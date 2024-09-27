@@ -74,7 +74,7 @@ jobs:
           scope: user:UnstoppableMango
 
       - name: Pulumi Preview
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           work-dir: packages/hosts
           stack-name: UnstoppableMango/hosts/${{ matrix.host }}
