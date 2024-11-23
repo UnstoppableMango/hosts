@@ -1,0 +1,14 @@
+config:
+  baremetal:address: 192.168.1.14
+  hosts:hostname: pollux
+  hosts:role: worker
+  hosts:arch: amd64
+  hosts:ip: 192.168.1.14
+  hosts:clusterIp: 192.168.1.14
+  hosts:installDisk: /dev/sda
+  hosts:vlans:
+    eno2.69:
+      id: 69
+      link: eno2
+      addresses:
+        - 10.69.2.5/16
