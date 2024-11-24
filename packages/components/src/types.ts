@@ -26,6 +26,8 @@ export const HostNames = z.union([
 	z.literal('zeus'),
 	z.literal('apollo'),
 	z.literal('gaea'),
+	z.literal('castor'),
+	z.literal('pollux'),
 	z.literal('pik8s4'),
 	z.literal('pik8s5'),
 	z.literal('pik8s6'),
