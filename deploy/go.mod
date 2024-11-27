@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/pulumi/pulumi/sdk/v3 v3.142.0
 	github.com/spf13/cobra v1.8.1
-	golang.org/x/sync v0.8.0
+	golang.org/x/sync v0.9.0
 )
 
 require (
