@@ -1,11 +1,11 @@
 config:
-  baremetal:address: 192.168.1.104
-  hosts:hostname: pik8s4
+  baremetal:address: 192.168.1.102
+  hosts:hostname: pik8s2
   hosts:role: controlplane
   hosts:arch: arm64
   hosts:installDisk: /dev/mmcblk0
-  hosts:ip: 192.168.1.104
-  hosts:clusterIp: 192.168.1.104
+  hosts:ip: 192.168.1.102
+  hosts:clusterIp: 192.168.1.102
   hosts:vipInterface: eth0
   # hosts:vlans:
   #   eth0.69:

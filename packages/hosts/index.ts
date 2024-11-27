@@ -212,7 +212,8 @@ const k3sArgs: pulumi.Input<string>[] = [
 ];
 
 if (config.bootstrapNode === name) {
-	k3sInstallEnv.K3S_CLUSTER_INIT = 'true';
+	// I'm scared to change this
+	// k3sInstallEnv.K3S_CLUSTER_INIT = 'true';
 	k3sInstallEnv.K3S_TOKEN = config.k3sToken;
 } else if (config.role === 'controlplane') {
 	k3sInstallEnv.K3S_TOKEN = config.k3sToken;

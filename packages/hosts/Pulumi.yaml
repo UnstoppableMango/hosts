@@ -29,6 +29,12 @@ config:
   systemdDirectory: /etc/systemd/system
   controlplanes:
     value:
+      - hostname: pik8s1
+        ip: 192.168.1.101
+      - hostname: pik8s2
+        ip: 192.168.1.102
+      - hostname: pik8s3
+        ip: 192.168.1.103
       - hostname: pik8s4
         ip: 192.168.1.104
       - hostname: pik8s5
@@ -41,6 +47,10 @@ config:
         ip: 192.168.1.10
       - hostname: gaea
         ip: 192.168.1.11
+      - hostname: castor
+        ip: 192.168.1.13
+      - hostname: pollux
+        ip: 192.168.1.14
       - hostname: vrk8s1
         ip: 192.168.1.107
       - hostname: pik8s8
