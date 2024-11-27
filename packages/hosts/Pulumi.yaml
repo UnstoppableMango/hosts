@@ -29,6 +29,12 @@ config:
   systemdDirectory: /etc/systemd/system
   controlplanes:
     value:
+      - hostname: pik8s1
+        ip: 192.168.1.101
+      - hostname: pik8s2
+        ip: 192.168.1.102
+      - hostname: pik8s3
+        ip: 192.168.1.103
       - hostname: pik8s4
         ip: 192.168.1.104
       - hostname: pik8s5
