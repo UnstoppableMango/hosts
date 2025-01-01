@@ -55,7 +55,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: dprint/check@v2.2
         with:
-          dprint-version: 0.47.5
+          dprint-version: 0.48.0
 
       - name: Lint
         if: false && github.event_name == 'pull_request'
