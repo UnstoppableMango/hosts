@@ -61,10 +61,6 @@ jobs:
         if: false && github.event_name == 'pull_request'
         run: yarn lint
 
-        # Random delay to work around the 500 errors
-      - name: Random Delay
-        run: sleep $((${{ strategy.job-index }} * 5))
-
       - name: Pulumi login
         uses: pulumi/auth-actions@v1
         with:
@@ -80,7 +76,7 @@ jobs:
           command: preview
           refresh: true
           pulumi-version-file: .versions/pulumi
-          # expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
+          expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
 
   deploy:
     runs-on: ubuntu-latest
