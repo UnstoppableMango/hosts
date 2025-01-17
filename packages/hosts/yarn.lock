@@ -1798,7 +1798,7 @@ tuf-js@^2.2.1:
     make-fetch-happen "^13.0.1"
 
 typescript@^5.0.0:
-  version "5.7.2"
+  version "5.7.3"
 
 undici-types@~5.26.4:
   version "5.26.5"
