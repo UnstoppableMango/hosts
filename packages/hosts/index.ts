@@ -199,10 +199,10 @@ const k3sInstallEnv: Record<string, pulumi.Input<string>> = {
 	INSTALL_K3S_VERSION: config.versions.k3s,
 	INSTALL_K3S_BIN_DIR: '/usr/local/bin',
 	INSTALL_K3S_SYSTEMD_DIR: config.systemdDirectory,
-  // K3S_CLUSTER_INIT: 'true',
+	// K3S_CLUSTER_INIT: 'true',
 	K3S_KUBECONFIG_OUTPUT: adminKubeconfigPath,
-  K3S_TOKEN: config.k3sToken,
-  K3S_URL: `https://${config.clusterEndpoint}:6443`,
+	K3S_TOKEN: config.k3sToken,
+	K3S_URL: `https://${config.clusterEndpoint}:6443`,
 };
 
 if (etcd) {
