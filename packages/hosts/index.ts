@@ -199,7 +199,10 @@ const k3sInstallEnv: Record<string, pulumi.Input<string>> = {
 	INSTALL_K3S_VERSION: config.versions.k3s,
 	INSTALL_K3S_BIN_DIR: '/usr/local/bin',
 	INSTALL_K3S_SYSTEMD_DIR: config.systemdDirectory,
+	// K3S_CLUSTER_INIT: 'true',
 	K3S_KUBECONFIG_OUTPUT: adminKubeconfigPath,
+	K3S_TOKEN: config.k3sToken,
+	K3S_URL: `https://${config.clusterEndpoint}:6443`,
 };
 
 if (etcd) {
@@ -210,18 +213,6 @@ if (etcd) {
 const k3sArgs: pulumi.Input<string>[] = [
 	config.role === 'controlplane' ? 'server' : 'agent',
 ];
-
-if (config.bootstrapNode === name) {
-	// I'm scared to change this
-	// k3sInstallEnv.K3S_CLUSTER_INIT = 'true';
-	k3sInstallEnv.K3S_TOKEN = config.k3sToken;
-} else if (config.role === 'controlplane') {
-	k3sInstallEnv.K3S_TOKEN = config.k3sToken;
-	k3sInstallEnv.K3S_URL = `https://${config.clusterEndpoint}:6443`;
-} else {
-	k3sInstallEnv.K3S_TOKEN = config.k3sToken;
-	k3sInstallEnv.K3S_URL = `https://${config.clusterEndpoint}:6443`;
-}
 
 if (config.role === 'controlplane') {
 	k3sArgs.push(
