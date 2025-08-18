@@ -84,7 +84,7 @@ export class KubeVip extends ComponentResource {
 				creationTimestamp: null,
 				labels: {
 					'app.kubernetes.io/name': 'kube-vip-ds',
-					'app.kubernetes.io/version': 'v0.8.3',
+					'app.kubernetes.io/version': 'v1.0.0',
 				},
 				name: 'kube-vip-ds',
 				namespace: 'kube-system',
@@ -100,7 +100,7 @@ export class KubeVip extends ComponentResource {
 						creationTimestamp: null,
 						labels: {
 							'app.kubernetes.io/name': 'kube-vip-ds',
-							'app.kubernetes.io/version': 'v0.8.3',
+							'app.kubernetes.io/version': 'v1.0.0',
 						},
 					},
 					spec: {
@@ -137,7 +137,7 @@ export class KubeVip extends ComponentResource {
 								{ name: 'dns_mode', value: 'first' },
 								{ name: 'cp_enable', value: 'true' },
 								{ name: 'cp_namespace', value: 'kube-system' },
-								{ name: 'svc_enable', value: 'true' },
+								{ name: 'svc_enable', value: 'false' }, // Don't watch LoadBalancers
 								{ name: 'svc_leasename', value: 'plndr-svcs-lock' },
 								{ name: 'vip_leaderelection', value: 'true' },
 								{ name: 'vip_leasename', value: 'plndr-cp-lock' },
@@ -147,7 +147,7 @@ export class KubeVip extends ComponentResource {
 								{ name: 'address', value: '192.168.1.100' },
 								// { name: 'prometheus_server', value: ':2112' },
 							],
-							image: 'ghcr.io/kube-vip/kube-vip:v0.8.3',
+							image: 'ghcr.io/kube-vip/kube-vip:v1.0.0',
 							imagePullPolicy: 'IfNotPresent',
 							name: 'kube-vip',
 							resources: {},
