@@ -210,12 +210,11 @@ if (etcd) {
 	// k3sInstallEnv.K3S_DATASTORE_CAFILE = etcd.caPath;
 }
 
-const k3sArgs: pulumi.Input<string>[] = [
-	config.role === 'controlplane' ? 'server' : 'agent',
-];
+const k3sArgs: pulumi.Input<string>[] = [];
 
 if (config.role === 'controlplane') {
 	k3sArgs.push(
+		'server',
 		`--tls-san=${config.bootstrapIp}`,
 		`--tls-san=${config.clusterEndpoint}`,
 		`--disable-network-policy`,
@@ -224,12 +223,15 @@ if (config.role === 'controlplane') {
 		`--disable=traefik`,
 		`--disable=metrics-server`,
 		`--disable=servicelb`,
+		// https://hub.docker.com/r/linuxserver/wireguard#usage
+		'--kubelet-arg=allowed-unsafe-sysctls=net.ipv4.conf.all.src_valid_mark',
 	);
 } else {
-	// k3sArgs.push('agent');
+	k3sArgs.push('agent');
 }
 
 const k3sArgsString = pulumi.all(k3sArgs).apply((x) => x.join(' '));
+
 const k3sInstall = runner.run(remote.Command, 'k3s-install', {
 	environment: k3sInstallEnv,
 	create: pulumi.interpolate`curl -sfL https://get.k3s.io | sh -s - ${k3sArgsString}`,

@@ -93,3 +93,14 @@ jobs:
 
       - name: Go Build
         run: make bin/deploy
+
+  nix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: cachix/install-nix-action@v31.2.0
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: nix flake check
