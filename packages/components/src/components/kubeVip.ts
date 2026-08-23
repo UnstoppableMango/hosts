@@ -36,7 +36,7 @@ export class KubeVip extends ComponentResource {
 								{ name: 'cp_enable', value: 'true' },
 								{ name: 'cp_namespace', value: 'kube-system' },
 								{ name: 'port', value: '6443' },
-								{ name: 'svc_enable', value: 'true' },
+								{ name: 'svc_enable', value: 'false' }, // I think this is fighting with metallb
 								{ name: 'vip_arp', value: 'true' },
 								{ name: 'vip_cidr', value: '32' },
 								{ name: 'vip_interface', value: args.interface },
@@ -137,7 +137,7 @@ export class KubeVip extends ComponentResource {
 								{ name: 'dns_mode', value: 'first' },
 								{ name: 'cp_enable', value: 'true' },
 								{ name: 'cp_namespace', value: 'kube-system' },
-								{ name: 'svc_enable', value: 'true' },
+								{ name: 'svc_enable', value: 'false' }, // I think this is fighting with metallb
 								{ name: 'svc_leasename', value: 'plndr-svcs-lock' },
 								{ name: 'vip_leaderelection', value: 'true' },
 								{ name: 'vip_leasename', value: 'plndr-cp-lock' },

@@ -11,10 +11,6 @@ install: .make/yarn_install
 	yarn build
 	@touch $@
 
-.make/yarn_install: package.json yarn.lock .make/corepack_enable
+.make/yarn_install: package.json yarn.lock
 	yarn install
-	@touch $@
-
-.make/corepack_enable: $(ROOT)/.nvmrc
-	corepack enable
 	@touch $@
