@@ -27,8 +27,10 @@
       flake.lib = import ./lib { inherit (nixpkgs) lib; };
 
       perSystem =
-        { pkgs, ... }:
+        { config, pkgs, ... }:
         {
+          packages.default = config.packages.hosts-json;
+
           devShells.default = pkgs.mkShellNoCC {
             packages = [ pkgs.nixfmt ];
           };
