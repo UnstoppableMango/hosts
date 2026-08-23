@@ -24,12 +24,12 @@
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
               gnumake
-							go
+              go
               pulumi
               nixfmt
               nodejs
               yarn
-							pulumiPackages.pulumi-nodejs
+              pulumiPackages.pulumi-nodejs
             ];
           };
 
