@@ -63,6 +63,21 @@ There is no status field; filter downstream if you only want a subset.
 | `hosts.lib.byArch "arm64"` | filtered attrset |
 | `hosts.lib.errors` | validation errors, empty when the data is well-formed |
 | `hosts.packages.<system>.hosts-json` | the same data as a `hosts.json` file |
+| `hosts.flakeModules.default` | a flake-parts module carrying the three outputs above |
+
+### As a flake-parts module
+
+```nix
+{
+  imports = [ inputs.hosts.flakeModules.default ];
+}
+```
+
+Importing it gives your flake a `flake.hosts` output, `packages.<system>.hosts-json`, and the `hosts-schema` check.
+It needs a `nixpkgs` input, like any flake-parts flake with `perSystem` outputs.
+
+The `lib` helpers are deliberately not injected: flake-parts allows only one definition of `flake.lib`, so a module setting it would collide with yours.
+Read them from `inputs.hosts.lib` instead.
 
 `hosts.nix` also imports directly, with no flake machinery:
 
