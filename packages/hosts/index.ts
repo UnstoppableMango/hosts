@@ -227,7 +227,12 @@ if (config.role === 'controlplane') {
 		'--kubelet-arg=allowed-unsafe-sysctls=net.ipv4.conf.all.src_valid_mark',
 	);
 } else {
-	k3sArgs.push('agent');
+	k3sArgs.push(
+		'agent',
+		'--kubelet-arg=max-pods=250',
+		// https://hub.docker.com/r/linuxserver/wireguard#usage
+		'--kubelet-arg=allowed-unsafe-sysctls=net.ipv4.conf.all.src_valid_mark',
+	);
 }
 
 const k3sArgsString = pulumi.all(k3sArgs).apply((x) => x.join(' '));
