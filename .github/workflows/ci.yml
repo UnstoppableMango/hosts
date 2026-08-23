@@ -5,95 +5,9 @@ on:
     branches: [main]
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      hosts: ${{ steps.hosts.outputs.hosts }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Hosts output
-        id: hosts
-        run: |
-          echo "hosts=$(make hosts_array)" >> "$GITHUB_OUTPUT"
-
-  pulumi:
-    runs-on: ubuntu-latest
-    needs: [setup]
-    strategy:
-      fail-fast: false
-      matrix:
-        host: ${{ fromJson(needs.setup.outputs.hosts) }}
-    concurrency:
-      group: ${{ matrix.host }}
-      cancel-in-progress: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: yarn
-          cache-dependency-path: yarn.lock
-
-      - name: Yarn install
-        run: yarn install --frozen-lockfile
-
-      - name: Dprint check
-        if: github.event_name == 'pull_request'
-        uses: dprint/check@v2.2
-        with:
-          dprint-version: 0.48.0
-
-      - name: Lint
-        if: false && github.event_name == 'pull_request'
-        run: yarn lint
-
-      - name: Pulumi login
-        uses: pulumi/auth-actions@v1
-        with:
-          organization: UnstoppableMango
-          requested-token-type: urn:pulumi:token-type:access_token:personal
-          scope: user:UnstoppableMango
-
-      - name: Pulumi Preview
-        uses: pulumi/actions@v6
-        with:
-          work-dir: packages/hosts
-          stack-name: UnstoppableMango/hosts/${{ matrix.host }}
-          command: preview
-          refresh: true
-          pulumi-version-file: .versions/pulumi
-          expect-no-changes: ${{ github.actor == 'renovate[bot]' }}
-
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: deploy/go.mod
-          cache-dependency-path: deploy/go.sum
-          cache: true
-
-      - name: Go Build
-        run: make bin/deploy
-
   nix:
     runs-on: ubuntu-latest
     steps:
