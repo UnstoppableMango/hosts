@@ -15,26 +15,21 @@
   outputs =
     inputs@{ flake-parts, nixpkgs, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        # Declares the `flakeModules` option used just below.
-        inputs.flake-parts.flakeModules.flakeModules
-        inputs.treefmt-nix.flakeModule
+      imports = with inputs; [
+        flake-parts.flakeModules.flakeModules
+        treefmt-nix.flakeModule
         ./modules/flake/hosts.nix
       ];
 
       systems = import inputs.systems;
 
-      # The module is named twice on purpose: `flakeModules` cannot be read
-      # while defining `imports`.
       flake.flakeModules.default = ./modules/flake/hosts.nix;
-
-      # Not set by the module itself; see the comment in modules/flake/hosts.nix.
       flake.lib = import ./lib { inherit (nixpkgs) lib; };
 
       perSystem =
         { pkgs, ... }:
         {
-          devShells.default = pkgs.mkShell {
+          devShells.default = pkgs.mkShellNoCC {
             packages = [ pkgs.nixfmt ];
           };
 
