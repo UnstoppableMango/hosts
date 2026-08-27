@@ -42,7 +42,7 @@ There is no status field; filter downstream if you only want a subset.
 | zeus | 192.168.1.10 | amd64 | basement, k8s, worker, tower, server |
 | gaea | 192.168.1.11 | amd64 | basement, k8s, worker, rack, server |
 | apollo | 192.168.1.12 | amd64 | basement, k8s, worker, rack, server, headless |
-| castor | 192.168.1.13 | amd64 | basement, k8s, worker, rack, server, headless |
+| castor | 10.0.69.13 | amd64 | basement, k8s, worker, rack, server, headless |
 | pollux | 10.0.69.14 | amd64 | basement, k8s, worker, rack, server, headless |
 | vrk8s1 | 192.168.1.107 | amd64 | living-room, tower, k8s, worker, server, headless, vr, gaming, tv, media |
 | pik8s0a | 192.168.1.114 | arm64 | pi4b, k8s, worker, server, headless, portable |

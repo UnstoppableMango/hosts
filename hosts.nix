@@ -71,7 +71,7 @@
   };
 
   castor = {
-    ip = "192.168.1.13";
+    ip = "10.0.69.13";
     arch = "amd64";
     tags = [
       "basement"
