@@ -6,7 +6,24 @@ in
 {
   options.flake = flake-parts-lib.mkSubmoduleOptions {
     hosts = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
+      type = lib.types.attrsOf (
+        lib.types.submodule {
+          options = {
+            ip = lib.mkOption {
+              type = lib.types.str;
+              description = "Address to reach the machine on.";
+            };
+            arch = lib.mkOption {
+              type = lib.types.enum hostsLib.architectures;
+              description = "CPU architecture.";
+            };
+            tags = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              description = "Free-form labels: location, form factor, role, function.";
+            };
+          };
+        }
+      );
       description = "Host metadata, keyed by hostname. See ./hosts.nix.";
     };
   };
