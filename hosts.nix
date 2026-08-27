@@ -84,7 +84,7 @@
   };
 
   pollux = {
-    ip = "192.168.1.14";
+    ip = "10.0.69.14";
     arch = "amd64";
     tags = [
       "basement"
