@@ -34,7 +34,7 @@
   };
 
   zeus = {
-    ip = "192.168.1.10";
+    ip = "10.0.69.10";
     arch = "amd64";
     tags = [
       "basement"
@@ -46,7 +46,7 @@
   };
 
   gaea = {
-    ip = "192.168.1.11";
+    ip = "10.0.69.11";
     arch = "amd64";
     tags = [
       "basement"
