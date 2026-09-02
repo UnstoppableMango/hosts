@@ -46,9 +46,9 @@ There is no status field; filter downstream if you only want a subset.
 | pollux | 10.0.69.14 | amd64 | basement, k8s, worker, rack, server, headless |
 | vrk8s1 | 192.168.1.107 | amd64 | living-room, tower, k8s, worker, server, headless, vr, gaming, tv, media |
 | pik8s0a | 192.168.1.114 | arm64 | pi4b, k8s, worker, server, headless, portable |
-| pik8s1 | 192.168.1.101 | arm64 | basement, pi4b, k8s, control-plane, server, headless |
-| pik8s2 | 192.168.1.102 | arm64 | basement, pi4b, k8s, control-plane, server, headless |
-| pik8s3 | 192.168.1.103 | arm64 | basement, pi4b, k8s, control-plane, server, headless |
+| pik8s1 | 10.0.69.101 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
+| pik8s2 | 10.0.69.102 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
+| pik8s3 | 10.0.69.103 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
 | pik8s4 | 10.0.69.104 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
 | pik8s5 | 10.0.69.105 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
 | pik8s6 | 10.0.69.106 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |

@@ -127,7 +127,7 @@
   };
 
   pik8s1 = {
-    ip = "192.168.1.101";
+    ip = "10.0.69.101";
     arch = "arm64";
     tags = [
       "basement"
@@ -136,11 +136,12 @@
       "control-plane"
       "server"
       "headless"
+      "rosequartz"
     ];
   };
 
   pik8s2 = {
-    ip = "192.168.1.102";
+    ip = "10.0.69.102";
     arch = "arm64";
     tags = [
       "basement"
@@ -149,11 +150,12 @@
       "control-plane"
       "server"
       "headless"
+      "rosequartz"
     ];
   };
 
   pik8s3 = {
-    ip = "192.168.1.103";
+    ip = "10.0.69.103";
     arch = "arm64";
     tags = [
       "basement"
@@ -162,6 +164,7 @@
       "control-plane"
       "server"
       "headless"
+      "rosequartz"
     ];
   };
 
