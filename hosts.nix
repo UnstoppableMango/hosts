@@ -58,7 +58,7 @@
   };
 
   apollo = {
-    ip = "192.168.1.12";
+    ip = "10.0.69.12";
     arch = "amd64";
     tags = [
       "basement"
