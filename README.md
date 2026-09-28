@@ -1,5 +1,7 @@
 # hosts
 
+[![Hercules CI](https://hercules-ci.com/api/v1/site/github/account/UnstoppableMango/project/hosts/badge)](https://hercules-ci.com/github/UnstoppableMango/hosts)
+
 Host metadata for THECLUSTER's machines, as a flake.
 
 This repo is a datasource and nothing else.
