@@ -1,13 +1,8 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": [
-		"config:recommended"
+		"github>UnstoppableMango/renovate-config",
+		"schedule:monthly"
 	],
-	"automerge": true,
-	"schedule": [
-		"before 4am on the first day of the month"
-	],
-	"nix": {
-		"enabled": true
-	}
+	"automerge": true
 }
