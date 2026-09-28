@@ -96,6 +96,19 @@
     ];
   };
 
+  iris = {
+    ip = "10.0.69.15";
+    arch = "amd64";
+    tags = [
+      "basement"
+      "k8s"
+      "worker"
+      "rack"
+      "server"
+      "headless"
+    ];
+  };
+
   vrk8s1 = {
     ip = "192.168.1.107";
     arch = "amd64";
