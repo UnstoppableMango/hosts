@@ -16,7 +16,7 @@
     inputs@{ flake-parts, nixpkgs, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = with inputs; [
-        systems.flakeModule
+        systems.flakeModule or { }
         flake-parts.flakeModules.flakeModules
         treefmt-nix.flakeModule
         ./modules/flake/hosts.nix
