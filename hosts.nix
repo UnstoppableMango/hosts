@@ -174,9 +174,8 @@
       "basement"
       "pi4b"
       "k8s"
-      "control-plane"
+      "worker"
       "server"
-      "headless"
       "rosequartz"
     ];
   };
