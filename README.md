@@ -50,7 +50,7 @@ There is no status field; filter downstream if you only want a subset.
 | pik8s0a | 192.168.1.114 | arm64 | pi4b, k8s, worker, server, headless, portable |
 | pik8s1 | 10.0.69.101 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
 | pik8s2 | 10.0.69.102 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
-| pik8s3 | 10.0.69.103 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
+| pik8s3 | 10.0.69.103 | arm64 | basement, pi4b, k8s, worker, server, rosequartz |
 | pik8s4 | 10.0.69.104 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
 | pik8s5 | 10.0.69.105 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
 | pik8s6 | 10.0.69.106 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
