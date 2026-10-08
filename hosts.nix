@@ -221,17 +221,4 @@
       "rosequartz"
     ];
   };
-
-  pik8s8 = {
-    ip = "192.168.1.115";
-    arch = "arm64";
-    tags = [
-      "basement"
-      "pi4b"
-      "k8s"
-      "worker"
-      "server"
-      "headless"
-    ];
-  };
 }
