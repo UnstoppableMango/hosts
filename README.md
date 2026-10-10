@@ -54,6 +54,9 @@ There is no status field; filter downstream if you only want a subset.
 | pik8s4 | 10.0.69.104 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
 | pik8s5 | 10.0.69.105 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
 | pik8s6 | 10.0.69.106 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
+| pik8s7 | 10.0.69.107 | arm64 | basement, pi4b, k8s, control-plane, server, headless |
+| pik8s8 | 10.0.69.108 | arm64 | basement, pi4b, k8s, control-plane, server, headless |
+| pik8s9 | 10.0.69.109 | arm64 | basement, pi4b, k8s, control-plane, server, headless |
 
 ### Tags
 
