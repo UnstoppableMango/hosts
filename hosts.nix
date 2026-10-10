@@ -221,4 +221,43 @@
       "rosequartz"
     ];
   };
+
+  pik8s7 = {
+    ip = "10.0.69.107";
+    arch = "arm64";
+    tags = [
+      "basement"
+      "pi4b"
+      "k8s"
+      "control-plane"
+      "server"
+      "headless"
+    ];
+  };
+
+  pik8s8 = {
+    ip = "10.0.69.108";
+    arch = "arm64";
+    tags = [
+      "basement"
+      "pi4b"
+      "k8s"
+      "control-plane"
+      "server"
+      "headless"
+    ];
+  };
+
+  pik8s9 = {
+    ip = "10.0.69.109";
+    arch = "arm64";
+    tags = [
+      "basement"
+      "pi4b"
+      "k8s"
+      "control-plane"
+      "server"
+      "headless"
+    ];
+  };
 }
