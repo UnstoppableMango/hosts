@@ -46,6 +46,7 @@ There is no status field; filter downstream if you only want a subset.
 | apollo | 192.168.1.12 | amd64 | basement, k8s, worker, rack, server, headless |
 | castor | 10.0.69.13 | amd64 | basement, k8s, worker, rack, server, headless |
 | pollux | 10.0.69.14 | amd64 | basement, k8s, worker, rack, server, headless |
+| theia | 10.0.69.15 | amd64 | bedroom-1, imac, k8s, worker, desktop, rosequartz |
 | vrk8s1 | 192.168.1.107 | amd64 | living-room, tower, k8s, worker, server, headless, vr, gaming, tv, media |
 | pik8s0a | 192.168.1.114 | arm64 | pi4b, k8s, worker, server, headless, portable |
 | pik8s1 | 10.0.69.101 | arm64 | basement, pi4b, k8s, control-plane, server, headless, rosequartz |
@@ -65,14 +66,15 @@ The tags in use group loosely into five kinds.
 
 | kind | tags |
 | --- | --- |
-| location | `basement`, `office`, `living-room`, `portable` |
-| form factor | `tower`, `rack`, `mini`, `pi4b` |
+| location | `basement`, `office`, `bedroom-1`, `living-room`, `portable` |
+| form factor | `tower`, `rack`, `mini`, `pi4b`, `imac` |
 | role | `control-plane`, `worker`, `workstation` |
-| function | `k8s`, `server`, `headless`, `gaming`, `media`, `tv`, `vr` |
+| function | `k8s`, `server`, `headless`, `desktop`, `gaming`, `media`, `tv`, `vr` |
 | cluster | `rosequartz` |
 
 Role is the one constrained group.
 Every host carries exactly one of `control-plane`, `worker`, or `workstation`, which is what the former `role` field guaranteed, and the validator enforces that count.
+What a person does at a machine's own screen is not a role: theia is a `worker` with the `desktop` tag, not a `workstation`.
 
 Consumers give tags their meaning.
 The nixos repo feeds them to clan as `inventory.machines.<name>.tags`, where services select machines by tag (`roles.pi4b.tags.pi4b`, `roles.server.tags.server`).
