@@ -96,16 +96,16 @@
     ];
   };
 
-  iris = {
+  theia = {
     ip = "10.0.69.15";
     arch = "amd64";
     tags = [
-      "basement"
+      "bedroom-1"
+      "imac"
       "k8s"
       "worker"
-      "rack"
-      "server"
-      "headless"
+      "desktop"
+      "rosequartz"
     ];
   };
 
