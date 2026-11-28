@@ -110,7 +110,7 @@
   };
 
   vrk8s1 = {
-    ip = "192.168.1.107";
+    ip = "10.0.69.16";
     arch = "amd64";
     tags = [
       "living-room"
@@ -123,6 +123,7 @@
       "gaming"
       "tv"
       "media"
+      "rosequartz"
     ];
   };
 
